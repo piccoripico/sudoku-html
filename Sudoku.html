@@ -233,17 +233,27 @@
 <body>
   <main>
     <h1>数独 (Sudoku)</h1>
-    <p class="subtitle">クリックでマスを選択し、テンキーまたは下のパッドで数字を入力してください。</p>
-
     <div class="top-bar">
       <div>
         <label for="clueCount">ヒント数</label>
         <select id="clueCount">
+          <option value="17">17 (最難関)</option>
+          <option value="18">18</option>
+          <option value="20">20</option>
+          <option value="22">22</option>
           <option value="24">24 (かなり難しい)</option>
+          <option value="26">26</option>
           <option value="28">28 (難しめ)</option>
+          <option value="30">30</option>
           <option value="32" selected>32 (標準)</option>
+          <option value="34">34</option>
+          <option value="36">36</option>
           <option value="38">38 (易しめ)</option>
+          <option value="40">40</option>
+          <option value="42">42</option>
           <option value="44">44 (かなり易しい)</option>
+          <option value="46">46</option>
+          <option value="48">48</option>
         </select>
       </div>
       <div>
@@ -266,7 +276,7 @@
           <button class="ghost" id="undo">↩️ １つ戻す</button>
           <button class="ghost" id="redo">↪️ １つ進める</button>
         </div>
-        <p class="hint-text">キーボードの 1-9 / Delete / Backspace に加え、矢印で移動、Enter でメモモード切替ができます。</p>
+        <p class="hint-text">キーボードの 1-9 で入力、0 / Delete / Backspace で削除、矢印で移動、Enter でメモモード切替ができます。メモモード時は右クリックまたは Shift+1〜9 で赤色メモにできます。</p>
         <div class="stats" id="stats">ヒント使用: 0回 / 解答表示: なし</div>
         <div class="status" id="status">読み込み中...</div>
       </div>
@@ -409,30 +419,63 @@
     }
 
     function generatePuzzle(clues, seedValue) {
-      const rand = createRng(seedValue);
       const clueCount = clampClues(clues);
-      const solutionBoard = generateFullBoard(rand);
-      const puzzleBoard = solutionBoard.map(row => [...row]);
-      const cells = [];
-      for (let r = 0; r < 9; r++) {
-        for (let c = 0; c < 9; c++) cells.push([r, c]);
-      }
-      shuffle(cells, rand);
+      const maxAttempts = clueCount <= 24 ? 24 : 1;
+      let best = null;
 
-      let removed = 0;
-      for (const [r, c] of cells) {
-        if (81 - removed <= clueCount) break;
-        const backup = puzzleBoard[r][c];
-        puzzleBoard[r][c] = 0;
-        const copy = puzzleBoard.map(row => [...row]);
-        if (countSolutions(copy) !== 1) {
-          puzzleBoard[r][c] = backup;
-        } else {
-          removed += 1;
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const rand = createRng(`${seedValue}:${attempt}`);
+        const solutionBoard = generateFullBoard(rand);
+        const puzzleBoard = solutionBoard.map(row => [...row]);
+        const cells = [];
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) cells.push([r, c]);
+        }
+        shuffle(cells, rand);
+
+        let removed = 0;
+        for (const [r, c] of cells) {
+          if (81 - removed <= clueCount) break;
+          const backup = puzzleBoard[r][c];
+          puzzleBoard[r][c] = 0;
+          const copy = puzzleBoard.map(row => [...row]);
+          if (countSolutions(copy) !== 1) {
+            puzzleBoard[r][c] = backup;
+          } else {
+            removed += 1;
+          }
+        }
+
+        const actualClueCount = 81 - removed;
+        if (!best || actualClueCount < best.actualClueCount) {
+          best = { puzzleBoard, solutionBoard, actualClueCount };
+        }
+        if (actualClueCount === clueCount) {
+          return { puzzleBoard, solutionBoard, actualClueCount };
         }
       }
 
-      return { puzzleBoard, solutionBoard };
+      const forcedRand = createRng(`${seedValue}:forced`);
+      const forcedPuzzleBoard = best.puzzleBoard.map(row => [...row]);
+      const filledCells = [];
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          if (forcedPuzzleBoard[r][c] !== 0) filledCells.push([r, c]);
+        }
+      }
+      shuffle(filledCells, forcedRand);
+      let currentClues = best.actualClueCount;
+      for (const [r, c] of filledCells) {
+        if (currentClues <= clueCount) break;
+        forcedPuzzleBoard[r][c] = 0;
+        currentClues -= 1;
+      }
+
+      return {
+        puzzleBoard: forcedPuzzleBoard,
+        solutionBoard: best.solutionBoard,
+        actualClueCount: currentClues
+      };
     }
 
     function cellKey(r, c) { return `${r}-${c}`; }
@@ -466,7 +509,7 @@
       }
       if (noteToggleEl) {
         noteToggleEl.classList.toggle('active', noteMode);
-        noteToggleEl.textContent = noteMode ? '✏️ メモ中' : '✏️ メモ';
+        noteToggleEl.textContent = '✏️ メモ';
       }
     }
 
@@ -570,10 +613,9 @@
           noteMap.clear();
         } else if (highlightNote) {
           const existing = noteMap.get(value);
-          const newHighlighted = !(existing && existing.highlighted);
-          if (existing && existing.highlighted === newHighlighted) return;
+          if (existing && existing.highlighted) return;
           recordStateForUndo();
-          noteMap.set(value, { highlighted: newHighlighted });
+          noteMap.set(value, { highlighted: true });
         } else {
           const existing = noteMap.get(value);
           if (existing) {
@@ -703,7 +745,7 @@
     function updateStats() {
       const hintText = `ヒント使用: ${hintCount}回`;
       const solutionText = `解答表示: ${solutionRevealed ? 'あり' : 'なし'}`;
-      const clueText = `選択ヒント数: ${selectedClueCount}`;
+      const clueText = `実ヒント数: ${selectedClueCount}`;
       const seedText = `シード: ${selectedSeedDisplay}`;
       statsEl.textContent = `${hintText} / ${solutionText} / ${clueText} / ${seedText}`;
     }
@@ -761,10 +803,10 @@
       const seedValue = seedWasRandom ? Math.floor(Math.random() * 1_000_000_000).toString() : seedValueRaw;
       setStatus('生成中...');
 
-      const { puzzleBoard, solutionBoard } = generatePuzzle(clues, seedValue);
+      const { puzzleBoard, solutionBoard, actualClueCount } = generatePuzzle(clues, seedValue);
       puzzle = puzzleBoard;
       solution = solutionBoard;
-      selectedClueCount = clues;
+      selectedClueCount = actualClueCount;
       selectedSeedDisplay = seedWasRandom ? `ランダム(${seedValue})` : seedValue;
       solutionDigitMap = new Map();
       for (let num = 1; num <= 9; num++) solutionDigitMap.set(num, []);
@@ -817,8 +859,12 @@
       if (event.ctrlKey && (event.key.toLowerCase() === 'y' || (event.shiftKey && event.key.toLowerCase() === 'z'))) { event.preventDefault(); redoAction(); return; }
 
       ensureSelection();
-      if (event.key >= '1' && event.key <= '9') {
-        applyValue(Number(event.key));
+      const digitMatch = /^(?:Digit|Numpad)([1-9])$/.exec(event.code);
+      if (digitMatch) {
+        const value = Number(digitMatch[1]);
+        const highlightNote = noteMode && event.shiftKey;
+        applyValue(value, { highlightNote });
+        event.preventDefault();
       } else if (event.key === 'Backspace' || event.key === 'Delete' || event.key === '0') {
         applyValue(0);
       }
