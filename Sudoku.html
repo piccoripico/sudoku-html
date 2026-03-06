@@ -232,10 +232,10 @@
 </head>
 <body>
   <main>
-    <h1>数独 (Sudoku)</h1>
+    <h1 id="title">数独 (Sudoku)</h1>
     <div class="top-bar">
       <div>
-        <label for="clueCount">ヒント数</label>
+        <label id="clueCountLabel" for="clueCount">ヒント数</label>
         <select id="clueCount">
           <option value="17">17 (最難関)</option>
           <option value="18">18</option>
@@ -257,28 +257,35 @@
         </select>
       </div>
       <div>
-        <label for="seed">シード</label>
+        <label id="seedLabel" for="seed">シード</label>
         <input id="seed" type="number" placeholder="任意" />
       </div>
-      <button class="primary" id="newGame">新しい盤面を作成</button>
-      <button class="ghost" id="reset">最初の状態に戻す</button>
-      <button class="ghost" id="hint">ヒントを埋める</button>
-      <button class="ghost" id="solve">答えを表示</button>
+      <div>
+        <label id="langLabel" for="lang">Language</label>
+        <select id="lang">
+          <option value="ja">日本語</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+      <button class="primary" id="newGame"></button>
+      <button class="ghost" id="reset"></button>
+      <button class="ghost" id="hint"></button>
+      <button class="ghost" id="solve"></button>
       <div class="timer" id="timer" aria-live="polite">--:--</div>
     </div>
 
     <div class="board-wrapper">
-      <div class="board" id="board" aria-label="数独盤面"></div>
+      <div class="board" id="board" aria-label="Sudoku board"></div>
       <div class="panel">
-        <h2>数字パッド</h2>
+        <h2 id="padTitle">数字パッド</h2>
         <div class="pad" id="pad"></div>
         <div class="controls">
           <button class="ghost" id="undo">↩️ １つ戻す</button>
           <button class="ghost" id="redo">↪️ １つ進める</button>
         </div>
-        <p class="hint-text">キーボードの 1-9 で入力、0 / Delete / Backspace で削除、矢印で移動、Enter でメモモード切替ができます。メモモード時は右クリックまたは Shift+1〜9 で赤色メモにできます。</p>
-        <div class="stats" id="stats">ヒント使用: 0回 / 解答表示: なし</div>
-        <div class="status" id="status">読み込み中...</div>
+        <p class="hint-text" id="hintText"></p>
+        <div class="stats" id="stats"></div>
+        <div class="status" id="status"></div>
       </div>
     </div>
   </main>
@@ -308,7 +315,153 @@
     let hintCount = 0;
     let solutionRevealed = false;
     let selectedClueCount = 32;
-    let selectedSeedDisplay = 'ランダム';
+    let selectedSeedRaw = '';
+    let selectedSeedWasRandom = true;
+    let currentLang = 'ja';
+
+    const I18N = {
+      ja: {
+        title: '数独 (Sudoku)',
+        clueLabel: 'ヒント数',
+        seedLabel: 'シード',
+        langLabel: '言語',
+        seedPlaceholder: '任意',
+        newGame: '新しい盤面を作成',
+        reset: '最初の状態に戻す',
+        hint: 'ヒントを埋める',
+        solve: '答えを表示',
+        padTitle: '数字パッド',
+        undo: '↩️ １つ戻す',
+        redo: '↪️ １つ進める',
+        noteButton: '✏️ メモ',
+        clearButton: '消去',
+        boardAriaLabel: '数独盤面',
+        hintText: 'キーボードの 1-9 で入力、0 / Delete / Backspace で削除、矢印で移動、Enter でメモモード切替ができます。メモモード時は右クリックまたは Shift+1〜9 で赤色メモにできます。',
+        statusLoading: '読み込み中...',
+        statusGenerating: '生成中...',
+        statusInputPrompt: '数字を入力してください。',
+        statusNoHint: 'ヒントを出せるマスがありません。',
+        statusSolved: 'おめでとうございます！すべて正解です。（タイム: {time}）',
+        statusSolutionShown: '解答を表示しました。',
+        statsHintUsed: 'ヒント使用: {count}回',
+        statsSolutionShown: '解答表示: {state}',
+        statsClues: '実ヒント数: {count}',
+        statsSeed: 'シード: {seed}',
+        yes: 'あり',
+        no: 'なし',
+        randomSeed: 'ランダム({seed})',
+        clueOptionLabels: {
+          17: '17 (最難関)',
+          24: '24 (かなり難しい)',
+          28: '28 (難しめ)',
+          32: '32 (標準)',
+          38: '38 (易しめ)',
+          44: '44 (かなり易しい)'
+        }
+      },
+      en: {
+        title: 'Sudoku',
+        clueLabel: 'Clues',
+        seedLabel: 'Seed',
+        langLabel: 'Language',
+        seedPlaceholder: 'Optional',
+        newGame: 'New Puzzle',
+        reset: 'Reset to Start',
+        hint: 'Fill a Hint',
+        solve: 'Show Solution',
+        padTitle: 'Number Pad',
+        undo: '↩️ Undo',
+        redo: '↪️ Redo',
+        noteButton: '✏️ Note',
+        clearButton: 'Clear',
+        boardAriaLabel: 'Sudoku board',
+        hintText: 'Use 1-9 to input, 0 / Delete / Backspace to clear, arrow keys to move, and Enter to toggle note mode. In note mode, right-click or Shift+1-9 creates red notes.',
+        statusLoading: 'Loading...',
+        statusGenerating: 'Generating...',
+        statusInputPrompt: 'Enter numbers to solve the puzzle.',
+        statusNoHint: 'No empty cell is available for a hint.',
+        statusSolved: 'Congratulations! Puzzle solved. (Time: {time})',
+        statusSolutionShown: 'Solution displayed.',
+        statsHintUsed: 'Hints used: {count}',
+        statsSolutionShown: 'Solution shown: {state}',
+        statsClues: 'Actual clues: {count}',
+        statsSeed: 'Seed: {seed}',
+        yes: 'yes',
+        no: 'no',
+        randomSeed: 'random({seed})',
+        clueOptionLabels: {
+          17: '17 (hardest)',
+          24: '24 (very hard)',
+          28: '28 (hard)',
+          32: '32 (normal)',
+          38: '38 (easy)',
+          44: '44 (very easy)'
+        }
+      }
+    };
+
+    function t(key, vars = {}) {
+      const dict = I18N[currentLang] || I18N.ja;
+      const template = dict[key] ?? I18N.ja[key] ?? '';
+      return String(template).replace(/\{(\w+)\}/g, (_, name) => vars[name] ?? '');
+    }
+
+    function formatSeedDisplay(seedValue, isRandom) {
+      return isRandom ? t('randomSeed', { seed: seedValue }) : seedValue;
+    }
+
+    function updateClueOptionLabels() {
+      const select = document.getElementById('clueCount');
+      const localized = I18N[currentLang].clueOptionLabels || {};
+      for (const option of select.options) {
+        const value = Number(option.value);
+        const base = localized[value] || String(value);
+        option.textContent = base;
+      }
+    }
+
+    function applyLanguage(lang) {
+      currentLang = I18N[lang] ? lang : 'ja';
+      document.documentElement.lang = currentLang;
+      const langSelect = document.getElementById('lang');
+      if (langSelect && langSelect.value !== currentLang) langSelect.value = currentLang;
+
+      document.getElementById('title').textContent = t('title');
+      document.getElementById('clueCountLabel').textContent = t('clueLabel');
+      document.getElementById('seedLabel').textContent = t('seedLabel');
+      document.getElementById('langLabel').textContent = t('langLabel');
+      document.getElementById('seed').placeholder = t('seedPlaceholder');
+      document.getElementById('newGame').textContent = t('newGame');
+      document.getElementById('reset').textContent = t('reset');
+      document.getElementById('hint').textContent = t('hint');
+      document.getElementById('solve').textContent = t('solve');
+      document.getElementById('padTitle').textContent = t('padTitle');
+      document.getElementById('hintText').textContent = t('hintText');
+      boardEl.setAttribute('aria-label', t('boardAriaLabel'));
+      undoEl.textContent = t('undo');
+      redoEl.textContent = t('redo');
+
+      updateClueOptionLabels();
+      if (noteToggleEl) noteToggleEl.textContent = t('noteButton');
+      const clearBtn = padEl.querySelector('button.secondary');
+      if (clearBtn) clearBtn.textContent = t('clearButton');
+
+      updateStats();
+      updateStatus();
+    }
+
+    function initLanguage() {
+      const savedLang = localStorage.getItem('sudoku_lang');
+      const browserLang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+      const preferred = savedLang && I18N[savedLang] ? savedLang : browserLang;
+      applyLanguage(preferred);
+      const langSelect = document.getElementById('lang');
+      langSelect.addEventListener('change', (event) => {
+        const lang = event.target.value;
+        applyLanguage(lang);
+        localStorage.setItem('sudoku_lang', currentLang);
+      });
+    }
 
     function createRng(seedInput) {
       if (seedInput === '' || seedInput === null || seedInput === undefined) return Math.random;
@@ -596,7 +749,7 @@
       }
       if (noteToggleEl) {
         noteToggleEl.classList.toggle('active', noteMode);
-        noteToggleEl.textContent = '✏️ メモ';
+        noteToggleEl.textContent = t('noteButton');
       }
     }
 
@@ -658,12 +811,12 @@
         padEl.appendChild(btn);
       }
       noteToggleEl = document.createElement('button');
-      noteToggleEl.textContent = '✏️ メモ';
+      noteToggleEl.textContent = t('noteButton');
       noteToggleEl.className = 'pad-action';
       noteToggleEl.addEventListener('click', () => toggleNoteMode());
       padEl.appendChild(noteToggleEl);
       const clearBtn = document.createElement('button');
-      clearBtn.textContent = '消去';
+      clearBtn.textContent = t('clearButton');
       clearBtn.classList.add('secondary');
       clearBtn.addEventListener('click', () => applyValue(0));
       padEl.appendChild(clearBtn);
@@ -830,14 +983,18 @@
     }
 
     function updateStats() {
-      const hintText = `ヒント使用: ${hintCount}回`;
-      const solutionText = `解答表示: ${solutionRevealed ? 'あり' : 'なし'}`;
-      const clueText = `実ヒント数: ${selectedClueCount}`;
-      const seedText = `シード: ${selectedSeedDisplay}`;
+      const hintText = t('statsHintUsed', { count: hintCount });
+      const solutionText = t('statsSolutionShown', { state: solutionRevealed ? t('yes') : t('no') });
+      const clueText = t('statsClues', { count: selectedClueCount });
+      const seedText = t('statsSeed', { seed: formatSeedDisplay(selectedSeedRaw, selectedSeedWasRandom) });
       statsEl.textContent = `${hintText} / ${solutionText} / ${clueText} / ${seedText}`;
     }
 
     function updateStatus() {
+      if (!current.length || !solution.length) {
+        setStatus(t('statusLoading'));
+        return;
+      }
       let filled = true;
       for (let r = 0; r < 9; r++) {
         for (let c = 0; c < 9; c++) {
@@ -850,9 +1007,9 @@
           solvedAt = Date.now();
           stopTimer(true);
         }
-        setStatus(`おめでとうございます！すべて正解です。（タイム: ${formatTime(solvedAt - timerStart)}）`, 'success');
+        setStatus(t('statusSolved', { time: formatTime(solvedAt - timerStart) }), 'success');
       } else {
-        setStatus('数字を入力してください。');
+        setStatus(t('statusInputPrompt'));
       }
     }
 
@@ -888,13 +1045,14 @@
       const seedValueRaw = seedInput.value.trim();
       const seedWasRandom = seedValueRaw === '';
       const seedValue = seedWasRandom ? Math.floor(Math.random() * 1_000_000_000).toString() : seedValueRaw;
-      setStatus('生成中...');
+      setStatus(t('statusGenerating'));
 
       const { puzzleBoard, solutionBoard, actualClueCount } = generatePuzzle(clues, seedValue);
       puzzle = puzzleBoard;
       solution = solutionBoard;
       selectedClueCount = actualClueCount;
-      selectedSeedDisplay = seedWasRandom ? `ランダム(${seedValue})` : seedValue;
+      selectedSeedRaw = seedValue;
+      selectedSeedWasRandom = seedWasRandom;
       solutionDigitMap = new Map();
       for (let num = 1; num <= 9; num++) solutionDigitMap.set(num, []);
       givens = new Set();
@@ -972,7 +1130,7 @@
           }
         }
       }
-      setStatus('ヒントを出せるマスがありません。', 'warning');
+      setStatus(t('statusNoHint'), 'warning');
     }
 
     function showSolution() {
@@ -984,7 +1142,7 @@
       stopTimer(true);
       solutionRevealed = true;
       updateStats();
-      setStatus('解答を表示しました。', 'success');
+      setStatus(t('statusSolutionShown'), 'success');
     }
 
     function undoAction() {
@@ -1011,6 +1169,8 @@
 
     buildBoard();
     buildPad();
+    initLanguage();
+    setStatus(t('statusLoading'));
     loadNewPuzzle();
   </script>
 </body>
