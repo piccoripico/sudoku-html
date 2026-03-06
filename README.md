@@ -5,6 +5,9 @@ Just open `Sudoku.html` directly in your browser and start playing right away.
 ### インターネットもインストールも不要
 `Sudoku.html` を直接ブラウザで開けば、そのままプレイできます。
 
+## Screenshot
+![screenshot_board_en](Screenshot/screenshot_board_en.JPG)
+
 ---
 
 ### Overview
@@ -47,6 +50,7 @@ This is a browser-based Sudoku game. You can switch between **Japanese / English
 ---
 
 ## 日本語
+![screenshot_board_ja](Screenshot/screenshot_board_ja.JPG)
 
 ### 概要
 ブラウザ向けの数独ゲームです。言語セレクタで **Japanese / English** を切り替えできます。
