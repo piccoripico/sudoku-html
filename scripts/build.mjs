@@ -8,6 +8,10 @@ const distDir = path.join(rootDir, 'dist');
 
 const importPattern = /^\s*import\s+[^'"]+['"](.+)['"];\s*$/gm;
 
+function normalizeLineEndings(source) {
+  return source.replace(/\r\n/g, '\n');
+}
+
 function escapeInlineScript(source) {
   return source.replace(/<\/script/gi, '<\\/script');
 }
@@ -27,7 +31,7 @@ async function bundleJavaScript(entryFile) {
     }
     visited.add(absolutePath);
 
-    const source = await readFile(absolutePath, 'utf8');
+    const source = normalizeLineEndings(await readFile(absolutePath, 'utf8'));
     const imports = [...source.matchAll(importPattern)].map((match) => match[1]);
 
     for (const dependency of imports) {
@@ -56,8 +60,8 @@ async function bundleJavaScript(entryFile) {
 }
 
 async function build() {
-  const htmlTemplate = await readFile(path.join(srcDir, 'index.html'), 'utf8');
-  const cssSource = await readFile(path.join(srcDir, 'styles.css'), 'utf8');
+  const htmlTemplate = normalizeLineEndings(await readFile(path.join(srcDir, 'index.html'), 'utf8'));
+  const cssSource = normalizeLineEndings(await readFile(path.join(srcDir, 'styles.css'), 'utf8'));
   const jsSource = await bundleJavaScript(path.join(srcDir, 'main.js'));
 
   const output = htmlTemplate
