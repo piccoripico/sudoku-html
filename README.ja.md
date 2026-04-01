@@ -44,6 +44,7 @@
 このリポジトリには [`.github/workflows/pages.yml`](./.github/workflows/pages.yml) という Pages 専用 workflow を追加しています。
 `main` に push すると、GitHub Actions がテストを実行し、`dist/Sudoku.html` をビルドし、`public/index.html` にコピーして GitHub Pages にデプロイします。
 つまり、pull request の段階では CI が確認を行い、マージ後に `main` へ入った変更は Pages workflow が公開します。
+公開 URL: <https://piccoripico.github.io/sudoku-html/>
 
 有効化するには、リポジトリ設定で次を行ってください。
 
@@ -60,7 +61,7 @@
 ## ゲームの説明
 
 この README はリポジトリ説明に寄せています。
-遊び方、操作方法、スクリーンショット、ゲーム機能の説明は別ドキュメントに切り出しています。
+遊び方、操作方法、スクリーンショットの説明は別ドキュメントに切り出しています。
 
 - [ゲームガイド（英語）](./docs/GAME_GUIDE.md)
 - [ゲームガイド（日本語）](./docs/GAME_GUIDE.ja.md)

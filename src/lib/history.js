@@ -19,6 +19,7 @@ export function captureSnapshot(state, now = Date.now()) {
     hintCount: state.hintCount,
     solutionRevealed: state.solutionRevealed,
     noteMode: state.noteMode,
+    highlightNoteMode: state.highlightNoteMode,
     selectedCell: state.selectedCell ? { ...state.selectedCell } : null,
     timer: captureTimerSnapshot(state.timer, now)
   };
@@ -30,6 +31,7 @@ export function restoreSnapshot(state, snapshot, now = Date.now()) {
   state.hintCount = snapshot.hintCount;
   state.solutionRevealed = snapshot.solutionRevealed;
   state.noteMode = snapshot.noteMode;
+  state.highlightNoteMode = snapshot.highlightNoteMode ?? false;
   state.selectedCell = snapshot.selectedCell ? { ...snapshot.selectedCell } : null;
   restoreTimerFromSnapshot(state.timer, snapshot.timer, now);
 }

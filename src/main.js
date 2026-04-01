@@ -11,6 +11,12 @@ const statsEl = document.getElementById('stats');
 const timerEl = document.getElementById('timer');
 const undoEl = document.getElementById('undo');
 const redoEl = document.getElementById('redo');
+const helpButtonEl = document.getElementById('help');
+const helpOverlayEl = document.getElementById('helpOverlay');
+const helpTitleEl = document.getElementById('helpTitle');
+const helpDialogEl = document.getElementById('helpDialog');
+const helpContentEl = document.getElementById('helpContent');
+const helpCloseEl = document.getElementById('helpClose');
 
 const state = {
   puzzle: [],
@@ -20,6 +26,7 @@ const state = {
   givens: new Set(),
   selectedCell: null,
   noteMode: false,
+  highlightNoteMode: false,
   history: [],
   future: [],
   solutionDigitMap: new Map(),
@@ -33,6 +40,8 @@ const state = {
 };
 
 let noteToggleEl = null;
+let highlightNoteToggleEl = null;
+let clearPadButtonEl = null;
 let timerInterval = null;
 
 function t(key, vars = {}) {
@@ -92,15 +101,39 @@ function getSelectedElement() {
   return boardEl.children[index] || null;
 }
 
-function syncNoteModeButton() {
-  if (!noteToggleEl) return;
-  noteToggleEl.classList.toggle('active', state.noteMode);
-  noteToggleEl.textContent = t('noteButton');
+function syncPadModeButtons() {
+  if (noteToggleEl) {
+    noteToggleEl.classList.toggle('active', state.noteMode);
+    noteToggleEl.textContent = t('noteButton');
+  }
+
+  if (highlightNoteToggleEl) {
+    highlightNoteToggleEl.classList.toggle('active', state.noteMode && state.highlightNoteMode);
+    highlightNoteToggleEl.classList.toggle('disabled', !state.noteMode);
+    highlightNoteToggleEl.disabled = !state.noteMode;
+    highlightNoteToggleEl.textContent = t('redNoteButton');
+  }
+
+  if (clearPadButtonEl) {
+    clearPadButtonEl.textContent = t('clearButton');
+  }
 }
 
 function toggleNoteMode(force) {
   state.noteMode = typeof force === 'boolean' ? force : !state.noteMode;
-  syncNoteModeButton();
+  if (!state.noteMode) {
+    state.highlightNoteMode = false;
+  }
+  syncPadModeButtons();
+}
+
+function toggleHighlightNoteMode(force) {
+  if (!state.noteMode) {
+    state.noteMode = true;
+  }
+
+  state.highlightNoteMode = typeof force === 'boolean' ? force : !state.highlightNoteMode;
+  syncPadModeButtons();
 }
 
 function recordStateForUndo() {
@@ -113,7 +146,7 @@ function recordStateForUndo() {
 
 function restoreState(snapshot) {
   restoreSnapshot(state, snapshot);
-  syncNoteModeButton();
+  syncPadModeButtons();
   syncTimerInterval();
   updateTimerDisplay();
   renderBoard();
@@ -144,6 +177,73 @@ function setStatus(message, type = '') {
   statusEl.className = `status ${type}`.trim();
 }
 
+function renderHelp() {
+  const locale = I18N[state.currentLang] || I18N.ja;
+  const helpSections = locale.helpSections || [];
+
+  helpButtonEl.textContent = t('helpButton');
+  helpTitleEl.textContent = t('helpTitle');
+  helpCloseEl.textContent = t('helpClose');
+  helpContentEl.innerHTML = '';
+
+  for (const section of helpSections) {
+    const sectionEl = document.createElement('section');
+    sectionEl.className = 'help-section';
+
+    const heading = document.createElement('h3');
+    heading.textContent = section.title;
+    sectionEl.appendChild(heading);
+
+    const list = document.createElement('ul');
+    list.className = 'help-list';
+
+    for (const item of section.items) {
+      const entry = document.createElement('li');
+      const label = document.createElement('strong');
+      label.textContent = `${item.label}: `;
+      entry.append(label);
+
+      if (item.text) {
+        entry.append(document.createTextNode(item.text));
+      }
+
+      if (item.href) {
+        if (item.text) {
+          entry.append(document.createTextNode(' '));
+        }
+
+        const link = document.createElement('a');
+        link.href = item.href;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = item.linkText || item.href;
+        entry.append(link);
+      }
+
+      if (item.note) {
+        entry.append(document.createTextNode(` ${item.note}`));
+      }
+
+      list.appendChild(entry);
+    }
+
+    sectionEl.appendChild(list);
+    helpContentEl.appendChild(sectionEl);
+  }
+}
+
+function setHelpOpen(open) {
+  helpOverlayEl.hidden = !open;
+  helpButtonEl.setAttribute('aria-expanded', String(open));
+  document.body.classList.toggle('help-open', open);
+
+  if (open) {
+    helpCloseEl.focus();
+  } else {
+    helpButtonEl.focus();
+  }
+}
+
 function applyLanguage(lang) {
   state.currentLang = I18N[lang] ? lang : 'ja';
   document.documentElement.lang = state.currentLang;
@@ -170,13 +270,9 @@ function applyLanguage(lang) {
   redoEl.textContent = t('redo');
 
   updateClueOptionLabels();
-  syncNoteModeButton();
+  syncPadModeButtons();
 
-  const clearButton = padEl.querySelector('button.secondary');
-  if (clearButton) {
-    clearButton.textContent = t('clearButton');
-  }
-
+  renderHelp();
   updateStats();
   updateStatus();
 }
@@ -229,13 +325,17 @@ function buildPad() {
   noteToggleEl.addEventListener('click', () => toggleNoteMode());
   padEl.appendChild(noteToggleEl);
 
-  const clearButton = document.createElement('button');
-  clearButton.classList.add('secondary');
-  clearButton.addEventListener('click', () => applyValue(0));
-  padEl.appendChild(clearButton);
+  highlightNoteToggleEl = document.createElement('button');
+  highlightNoteToggleEl.className = 'pad-action red-note';
+  highlightNoteToggleEl.addEventListener('click', () => toggleHighlightNoteMode());
+  padEl.appendChild(highlightNoteToggleEl);
 
-  syncNoteModeButton();
-  clearButton.textContent = t('clearButton');
+  clearPadButtonEl = document.createElement('button');
+  clearPadButtonEl.classList.add('secondary');
+  clearPadButtonEl.addEventListener('click', clearSelectedCell);
+  padEl.appendChild(clearPadButtonEl);
+
+  syncPadModeButtons();
 }
 
 function selectCell(row, col) {
@@ -266,6 +366,23 @@ function moveSelection(rowDelta, colDelta) {
   selectCell(nextRow, nextCol);
 }
 
+function clearSelectedCell() {
+  if (!state.selectedCell) return;
+
+  const { row, col } = state.selectedCell;
+  if (state.givens.has(cellKey(row, col))) return;
+
+  const hasValue = state.current[row][col] !== 0;
+  const hasNotes = state.notes[row][col].size > 0;
+  if (!hasValue && !hasNotes) return;
+
+  recordStateForUndo();
+  state.current[row][col] = 0;
+  state.notes[row][col].clear();
+  renderBoard();
+  updateStatus();
+}
+
 function applyValue(value, options = {}) {
   const { highlightNote = false } = options;
   if (!state.selectedCell) return;
@@ -279,12 +396,13 @@ function applyValue(value, options = {}) {
 
   if (state.noteMode) {
     const noteMap = state.notes[row][col];
+    const useHighlightedNote = highlightNote || state.highlightNoteMode;
 
     if (value === 0) {
       if (!noteMap.size) return;
       recordStateForUndo();
       noteMap.clear();
-    } else if (highlightNote) {
+    } else if (useHighlightedNote) {
       const existing = noteMap.get(value);
       if (existing && existing.highlighted) return;
       recordStateForUndo();
@@ -591,6 +709,14 @@ function redoAction() {
 }
 
 function handleKey(event) {
+  if (!helpOverlayEl.hidden) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      setHelpOpen(false);
+    }
+    return;
+  }
+
   if (isTypingTarget(event.target)) {
     return;
   }
@@ -647,7 +773,7 @@ function handleKey(event) {
   }
 
   if (event.key === 'Backspace' || event.key === 'Delete' || event.key === '0') {
-    applyValue(0);
+    clearSelectedCell();
     event.preventDefault();
   }
 }
@@ -656,6 +782,13 @@ document.getElementById('newGame').addEventListener('click', loadNewPuzzle);
 document.getElementById('reset').addEventListener('click', () => resetBoard(true, true));
 document.getElementById('hint').addEventListener('click', revealHint);
 document.getElementById('solve').addEventListener('click', showSolution);
+helpButtonEl.addEventListener('click', () => setHelpOpen(true));
+helpCloseEl.addEventListener('click', () => setHelpOpen(false));
+helpOverlayEl.addEventListener('click', (event) => {
+  if (event.target === helpOverlayEl) {
+    setHelpOpen(false);
+  }
+});
 undoEl.addEventListener('click', undoAction);
 redoEl.addEventListener('click', redoAction);
 document.addEventListener('keydown', handleKey);

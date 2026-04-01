@@ -51,6 +51,7 @@ test('history snapshots preserve meta state and resume timers correctly', () => 
     hintCount: 2,
     solutionRevealed: true,
     noteMode: true,
+    highlightNoteMode: true,
     selectedCell: { row: 4, col: 5 },
     timer: createTimerState()
   };
@@ -67,6 +68,7 @@ test('history snapshots preserve meta state and resume timers correctly', () => 
     hintCount: 0,
     solutionRevealed: false,
     noteMode: false,
+    highlightNoteMode: false,
     selectedCell: null,
     timer: createTimerState()
   };
@@ -78,6 +80,7 @@ test('history snapshots preserve meta state and resume timers correctly', () => 
   assert.equal(restoredState.hintCount, 2);
   assert.equal(restoredState.solutionRevealed, true);
   assert.equal(restoredState.noteMode, true);
+  assert.equal(restoredState.highlightNoteMode, true);
   assert.deepEqual(restoredState.selectedCell, { row: 4, col: 5 });
   assert.equal(getElapsedMs(restoredState.timer, 5300), 900);
 });

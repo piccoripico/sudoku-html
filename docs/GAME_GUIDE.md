@@ -1,47 +1,42 @@
 # Sudoku Game Guide
 
-## Documents
-
-- [Repository Guide (English)](../README.md)
-- [Repository Guide (Japanese)](../README.ja.md)
-- [Game Guide (Japanese)](./GAME_GUIDE.ja.md)
-
-## Screenshot
-
 ![Sudoku board](./screenshot_board_en.JPG)
 
-## Getting Started
+## How to Play
 
-1. Download the release asset or build `dist/Sudoku.html` locally.
-2. Open `Sudoku.html` directly in Chrome, Edge, or another browser.
-3. Start playing immediately.
+- Select a cell and enter a number from 1 to 9.
+- The puzzle is complete when every row, column, and 3x3 block outlined by the thick lines contains each number from 1 to 9 exactly once.
+- Every generated puzzle has exactly one solution.
+- Duplicate numbers and numbers that have been correctly completed in all nine positions are highlighted.
+- You can play offline. Gameplay itself does not require any internet connection.
 
-## Controls (Mouse)
+## Controls and Buttons Above the Board
 
-- **Enter a number**: Click `1` to `9` on the number pad
-- **Clear**: Click `Clear` on the number pad
-- **Move to a cell**: Click the cell on the board where you want to enter a number
-- **Toggle note mode**: Click the `✏️ Note` button on the number pad
-- **Red notes**: While in note mode, **right-click** `1` to `9` on the number pad
-- **Undo / Redo**: Click the `↩️ Undo` / `↪️ Redo` buttons
+- `Clues`: Sets the number of starting clues for the next puzzle.
+- `Seed`: Enter the same seed to recreate the same puzzle. Leave it empty for a random puzzle.
+- `Language`: Switches the interface language.
+- `How to Play`: Opens the help dialog. It is available offline.
+- `New Puzzle`: Generates a new puzzle with the current clue count and seed.
+- `Reset to Start`: Returns the board to its initial state. The timer also starts over.
+- `Fill a Hint`: Reveals one correct value in an empty cell.
+- `Show Solution`: Displays the completed solution.
+
+## Controls (Mouse / Tap)
+
+- Select a cell on the board.
+- Use the number pad to enter a number.
+- `Clear`: Clears the selected cell.
+- `✏️ Note`: Switches to note input mode. When note input mode is on, entering a number adds a note.
+- `🔴 Red Note`: Switches note input to red notes. While note input mode is on, you can also right-click a number with the mouse to enter a red note.
+- `↩️ Undo`: Undoes the most recent input or note.
+- `↪️ Redo`: Reapplies an undone input or note.
 
 ## Controls (Keyboard)
 
-- **Enter a number**: `1` to `9`
-- **Clear**: `0` / `Backspace` / `Delete`
-- **Move between cells**: Arrow keys
-- **Toggle note mode**: `Enter`
-- **Red notes**: `Shift+1` to `9`
-- **Undo / Redo**: `Ctrl+Z` / `Ctrl+Y` (`Ctrl+Shift+Z`)
-
-## Main Features
-
-- **Clues**: The selected clue count is used exactly for new puzzles.
-- **Unique solution**: Every generated puzzle keeps a unique solution.
-- **Seed**: Entering the same seed value generates the same puzzle.
-- **Timer**: Measures the time from puzzle generation until completion.
-- **Duplicate number warning**: Highlights duplicate numbers.
-- **Highlight completed numbers**: Highlights numbers that have been fully completed.
-- **Reset to Start**: Resets the puzzle to its original starting state.
-- **Fill a Hint**: Adds another hint during play.
-- **Show Solution**: Displays the solution.
+- Arrow keys: Move between cells
+- `1` to `9`: Enter a number
+- `0` / `Backspace` / `Delete`: Clear the selected cell
+- `Enter`: Switch to note input mode
+- `Shift+1` to `9`: Enter a red note
+- `Ctrl+Z`: Undo
+- `Ctrl+Y` or `Ctrl+Shift+Z`: Redo
