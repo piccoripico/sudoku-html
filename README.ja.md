@@ -1,6 +1,9 @@
 # 数独 (Sudoku) HTML
 
-![数独盤面](./docs/screenshot_board_ja.JPG)
+<p align="center">
+  <img src="./docs/screenshot_pc_ja.JPG" alt="PCで見た数独画面" width="68%" />
+  <img src="./docs/screenshot_smartphone_ja.png" alt="スマホで見た数独画面" width="18%" />
+</p>
 
 ## ドキュメント
 

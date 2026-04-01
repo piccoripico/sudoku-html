@@ -1,6 +1,9 @@
 # 数独ゲームガイド
 
-![数独盤面](./screenshot_board_ja.JPG)
+<p align="center">
+  <img src="./screenshot_pc_ja.JPG" alt="PCで見た数独画面" width="68%" />
+  <img src="./screenshot_smartphone_ja.png" alt="スマホで見た数独画面" width="18%" />
+</p>
 
 ## 遊び方
 

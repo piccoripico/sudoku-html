@@ -1,6 +1,9 @@
 # Sudoku Game Guide
 
-![Sudoku board](./screenshot_board_en.JPG)
+<p align="center">
+  <img src="./screenshot_pc_en.JPG" alt="Sudoku on desktop" width="68%" />
+  <img src="./screenshot_smartphone_en.png" alt="Sudoku on smartphone" width="18%" />
+</p>
 
 ## How to Play
 

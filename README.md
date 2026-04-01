@@ -1,6 +1,9 @@
 # Sudoku HTML
 
-![Sudoku board](./docs/screenshot_board_en.JPG)
+<p align="center">
+  <img src="./docs/screenshot_pc_en.JPG" alt="Sudoku on desktop" width="68%" />
+  <img src="./docs/screenshot_smartphone_en.png" alt="Sudoku on smartphone" width="18%" />
+</p>
 
 ## Documents
 
