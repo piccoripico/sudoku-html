@@ -138,7 +138,7 @@ export const I18N = {
     helpSections: [
       {
         items: [
-          { label: 'Getting Started', text: 'Select a cell and enter a number from 1 to 9.' },
+          { label: 'Getting started', text: 'Select a cell and enter a number from 1 to 9.' },
           { label: 'Goal', text: 'The puzzle is complete when every row, column, and 3x3 block outlined by the thick lines contains each number from 1 to 9 exactly once.' },
           { label: 'Unique solution', text: 'Every generated puzzle has exactly one solution.' },
           { label: 'Highlighting', text: 'Duplicate numbers and numbers that have been correctly completed in all nine positions are highlighted.' },
