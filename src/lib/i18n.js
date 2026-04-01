@@ -9,7 +9,7 @@ export const I18N = {
     reset: '最初の状態に戻す',
     hint: 'ヒントを埋める',
     solve: '答えを表示',
-    helpButton: '使い方',
+    helpButton: '遊び方',
     helpClose: '閉じる',
     padTitle: '数字パッド',
     undo: '↩️ １つ戻す',
@@ -32,14 +32,13 @@ export const I18N = {
     yes: 'あり',
     no: 'なし',
     randomSeed: 'ランダム({seed})',
-    helpTitle: 'ゲームの使い方',
+    helpTitle: '遊び方',
     helpSections: [
       {
-        title: '遊び方',
         items: [
-          { label: '基本', text: '盤面のマスを選んで、1から9までの数字を入力してください。' },
-          { label: '完成条件', text: 'タテ、ヨコ、太線で囲まれた3x3のブロックのどれにも、1から9までの数字が1つずつ入れば完成です。' },
-          { label: '一意解', text: '生成される盤面はすべて、正解は1つのみです。' },
+          { label: 'はじめに', text: '盤面のマスを選んで、1から9までの数字を入力してください。' },
+          { label: 'ゴール', text: 'タテ、ヨコ、太線で囲まれた3x3のブロックのどれにも、1から9までの数字が1つずつ入れば完成です。' },
+          { label: '正解は1つ', text: '生成される盤面はすべて、正解は1つのみです。' },
           { label: 'ハイライト', text: '重複する数字と、9個すべて正しく埋まった数字は、ハイライト表示されます。' },
           { label: 'オフライン', text: 'オフラインで遊べます。ゲームプレイ中の操作はインターネット通信を生じさせません。' }
         ]
@@ -50,7 +49,7 @@ export const I18N = {
           { label: 'ヒント数', text: '新しい盤面を作るときの初期ヒント数を選びます。' },
           { label: 'シード', text: '同じ値を入れると、同じ盤面を再生成できます。空欄ならランダムです。' },
           { label: '言語', text: '画面表示の言語を切り替えます。' },
-          { label: '使い方', text: 'ヘルプを開きます。オフラインで読めます。' },
+          { label: '遊び方', text: 'ヘルプを開きます。オフラインで読めます。' },
           { label: '新しい盤面を作成', text: '現在の設定で新しい数独を生成します。' },
           { label: '最初の状態に戻す', text: '開始時点の盤面に戻します。タイマーも最初からやり直します。' },
           { label: 'ヒントを埋める', text: '空いているマスを 1 つだけ正解で埋めます。' },
@@ -82,10 +81,10 @@ export const I18N = {
         ]
       },
       {
-        title: '詳しい情報',
+        title: '詳細情報',
         items: [
           {
-            label: 'GitHub リポジトリ',
+            label: 'GitHub レポジトリ',
             href: 'https://github.com/piccoripico/sudoku-html',
             linkText: 'https://github.com/piccoripico/sudoku-html',
             note: '※インターネット接続が必要です。'
@@ -138,10 +137,9 @@ export const I18N = {
     helpTitle: 'How to Play',
     helpSections: [
       {
-        title: 'How to Play',
         items: [
-          { label: 'Basic play', text: 'Select a cell and enter a number from 1 to 9.' },
-          { label: 'Completion rule', text: 'The puzzle is complete when every row, column, and 3x3 block outlined by the thick lines contains each number from 1 to 9 exactly once.' },
+          { label: 'Getting Started', text: 'Select a cell and enter a number from 1 to 9.' },
+          { label: 'Goal', text: 'The puzzle is complete when every row, column, and 3x3 block outlined by the thick lines contains each number from 1 to 9 exactly once.' },
           { label: 'Unique solution', text: 'Every generated puzzle has exactly one solution.' },
           { label: 'Highlighting', text: 'Duplicate numbers and numbers that have been correctly completed in all nine positions are highlighted.' },
           { label: 'Offline', text: 'You can play offline. Gameplay itself does not require any internet connection.' }

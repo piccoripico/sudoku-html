@@ -189,11 +189,13 @@ function renderHelp() {
   for (const section of helpSections) {
     const sectionEl = document.createElement('section');
     sectionEl.className = 'help-section';
-
-    const heading = document.createElement('h3');
-    heading.textContent = section.title;
-    sectionEl.appendChild(heading);
-
+  
+    if (section.title) {
+      const heading = document.createElement('h3');
+      heading.textContent = section.title;
+      sectionEl.appendChild(heading);
+    }
+  
     const list = document.createElement('ul');
     list.className = 'help-list';
 
