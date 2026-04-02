@@ -1,9 +1,8 @@
 # 数独ゲームガイド
 
-<p align="center">
-  <img src="./screenshot_pc_ja.JPG" alt="PCで見た数独画面" width="68%" />
-  <img src="./screenshot_smartphone_ja.png" alt="スマホで見た数独画面" width="18%" />
-</p>
+| デスクトップ表示 | モバイル表示 |
+| --- | --- |
+| <img src="./screenshot_pc_ja.JPG" alt="デスクトップで見た数独画面" width="520" /> | <img src="./screenshot_smartphone_ja.png" alt="モバイルで見た数独画面" width="160" /> |
 
 ## 遊び方
 
