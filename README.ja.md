@@ -1,20 +1,35 @@
 # 数独 (Sudoku) HTML
 
-<p align="center">
-  <img src="./docs/screenshot_pc_ja.JPG" alt="PCで見た数独画面" width="68%" />
-  <img src="./docs/screenshot_smartphone_ja.png" alt="スマホで見た数独画面" width="18%" />
-</p>
+数独 (Sudoku) HTML は、単一の `Sudoku.html` ファイルだけを使って遊べるブラウザ向け数独ゲームです。このリポジトリには、分割されたソースコード、テスト、ビルドスクリプト、ドキュメント、そしてオンライン公開やリリース配布に使う GitHub Actions workflow が含まれています。
+
+| デスクトップ表示 | モバイル表示 |
+| --- | --- |
+| <img src="./docs/screenshot_pc_ja.JPG" alt="デスクトップで見た数独画面" width="520" /> | <img src="./docs/screenshot_smartphone_ja.png" alt="モバイルで見た数独画面" width="160" /> |
+
+## プレイ方法
+
+**HTML ファイルをダウンロードする**: [Sudoku.html](https://github.com/piccoripico/sudoku-html/releases/latest/download/Sudoku.html)
+
+- ダウンロードした `Sudoku.html` は、ブラウザで直接開けばオフラインで遊べます。
+
+**オンラインで遊ぶ**: <https://piccoripico.github.io/sudoku-html/>
+
+- `Sudoku.html` と同じプログラムを、オンラインで開くこともできます。
+- ページを開いた後は、インターネット接続なしで遊べます。
+
+## 特徴
+
+- **ポータブル**: アプリ全体が 1 つの `Sudoku.html` にまとまっているので、パソコンやスマホに保存しておけば、どこにでも持ち運べます。
+- **オフライン**: プログラムはオフラインで動くので、インターネット接続なしでどこでも遊べます。
+- **デスクトップ / モバイル UI**: 横幅の広いデスクトップ画面でも、縦長のモバイル画面でも使いやすいレイアウトです。
+- **完成盤面の数**: このアプリが生成できる完成盤面の数は、約6095億通りです。
+- **盤面の再現**: 同じシード値を入力して盤面を作成すれば、ヒントの配置も含めて、同じ盤面を再現できます。
 
 ## ドキュメント
 
 - [Repository Guide (English)](./README.md)
 - [ゲームガイド（英語）](./docs/GAME_GUIDE.md)
 - [ゲームガイド（日本語）](./docs/GAME_GUIDE.ja.md)
-
-## 概要
-
-このリポジトリには、ブラウザ向け数独ゲームのソースコード、テスト、ビルドスクリプト、GitHub Actions workflow が含まれています。
-配布物は、`dist/Sudoku.html` として生成される単一 HTML ファイルです。
 
 ## リポジトリ構成
 
@@ -24,47 +39,18 @@
 - [`docs/`](./docs): スクリーンショットや利用者向けドキュメント
 - [`.github/workflows/`](./.github/workflows): CI、Pages、リリースの自動化
 
-## 開発方法
+## 開発
 
 1. `npm test` を実行します。
 2. `npm run build` を実行します。
 3. ビルド結果を試したい場合は、ローカルの `dist/Sudoku.html` を開きます。
 
-## CI
+`dist/` は意図的に Git 管理対象から外しており、ダウンロード配布用の `Sudoku.html` は release workflow がソースから生成します。
 
-[`.github/workflows/ci.yml`](./.github/workflows/ci.yml) の CI workflow は、`main` 向けの pull request で実行されます。
-必要なら `Actions` タブから `workflow_dispatch` で手動実行することもできます。
+## 自動化
 
-## 配布方法
+GitHub Actions により、テスト、Pages 公開、Release asset 生成を自動化しています。
 
-`dist/` は意図的に Git 管理対象から外しています。
-ローカル確認では `dist/Sudoku.html` をビルドしてブラウザで直接開いてください。
-オンライン公開には、GitHub Actions から GitHub Pages へ自動デプロイする方法が使えます。
-ダウンロード配布では、release workflow が生成した GitHub Release asset を使うか、ローカルで生成した `dist/Sudoku.html` を手動でアップロードします。
-
-## GitHub Pages
-
-このリポジトリには [`.github/workflows/pages.yml`](./.github/workflows/pages.yml) という Pages 専用 workflow を追加しています。
-`main` に push すると、GitHub Actions がテストを実行し、`dist/Sudoku.html` をビルドし、`public/index.html` にコピーして GitHub Pages にデプロイします。
-つまり、pull request の段階では CI が確認を行い、マージ後に `main` へ入った変更は Pages workflow が公開します。
-公開 URL: <https://piccoripico.github.io/sudoku-html/>
-
-有効化するには、リポジトリ設定で次を行ってください。
-
-1. `Settings -> Pages` を開きます。
-2. `Build and deployment` の `Source` を `GitHub Actions` にします。
-3. `main` に push するか、`Actions` タブから `Pages` workflow を手動実行します。
-
-## リリース方法
-
-1. `Sudoku_v1.1` や `v1.1.0` のようなリリース用タグを作成します。
-2. そのタグを GitHub に push します。
-3. GitHub Actions がテストを実行し、`dist/Sudoku.html` をビルドして GitHub Release に自動添付します。
-
-## ゲームの説明
-
-この README はリポジトリ説明に寄せています。
-遊び方、操作方法、スクリーンショットの説明は別ドキュメントに切り出しています。
-
-- [ゲームガイド（英語）](./docs/GAME_GUIDE.md)
-- [ゲームガイド（日本語）](./docs/GAME_GUIDE.ja.md)
+- CI: [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) は `main` 向けの pull request で実行され、`Actions` タブから手動実行もできます。
+- Pages: [`.github/workflows/pages.yml`](./.github/workflows/pages.yml) は `main` への push で実行され、`dist/Sudoku.html` をビルドして GitHub Pages <https://piccoripico.github.io/sudoku-html/> に公開します。
+- Release: [`.github/workflows/release.yml`](./.github/workflows/release.yml) は `v1.2.3` のようなバージョンタグ push で実行され、`Sudoku.html` を GitHub Release に自動添付します。

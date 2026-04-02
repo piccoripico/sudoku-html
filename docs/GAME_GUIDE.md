@@ -1,9 +1,8 @@
 # Sudoku Game Guide
 
-<p align="center">
-  <img src="./screenshot_pc_en.JPG" alt="Sudoku on desktop" width="68%" />
-  <img src="./screenshot_smartphone_en.png" alt="Sudoku on smartphone" width="18%" />
-</p>
+| Desktop view | Mobile view |
+| --- | --- |
+| <img src="./screenshot_pc_en.JPG" alt="Sudoku on desktop" width="520" /> | <img src="./screenshot_smartphone_en.png" alt="Sudoku on mobile" width="160" /> |
 
 ## How to Play
 
