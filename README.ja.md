@@ -41,9 +41,11 @@
 
 ## 開発
 
-1. `npm test` を実行します。
-2. `npm run build` を実行します。
-3. ビルド結果を試したい場合は、ローカルの `dist/Sudoku.html` を開きます。
+1. `npm ci` を実行します。
+2. `npm test` を実行します。
+3. `npm run build` を実行します。
+4. ブラウザテストを初めて使うときは、`npm run test:e2e:install` を実行します。
+5. ブラウザのスモークテストは `npm run test:e2e`、一連の確認は `npm run verify` で実行できます。
 
 `dist/` は意図的に Git 管理対象から外しており、ダウンロード配布用の `Sudoku.html` は release workflow がソースから生成します。
 

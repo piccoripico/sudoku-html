@@ -41,9 +41,11 @@ Sudoku HTML is a browser-based Sudoku game that you can play using a single `Sud
 
 ## Development
 
-1. Run `npm test`.
-2. Run `npm run build`.
-3. Open the local `dist/Sudoku.html` if you want to try the built result.
+1. Run `npm ci`.
+2. Run `npm test`.
+3. Run `npm run build`.
+4. The first time you use browser tests, run `npm run test:e2e:install`.
+5. Run `npm run test:e2e` for browser smoke tests, or `npm run verify` for the full local check.
 
 `dist/` is intentionally excluded from Git. The downloadable `Sudoku.html` file is generated from source by the release workflow.
 
