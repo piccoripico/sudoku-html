@@ -9,6 +9,8 @@ export const I18N = {
     reset: '最初の状態に戻す',
     hint: 'ヒントを埋める',
     solve: '答えを表示',
+    saveGame: '保存',
+    loadGame: '読込',
     helpButton: '遊び方',
     helpClose: '閉じる',
     padTitle: '数字パッド',
@@ -25,6 +27,11 @@ export const I18N = {
     statusNoHint: 'ヒントを出せるマスがありません。',
     statusSolved: 'おめでとうございます！すべて正解です。（タイム: {time}）',
     statusSolutionShown: '解答を表示しました。',
+    statusSaveSuccess: '現在の状態を保存しました。',
+    statusSaveError: '状態を保存できませんでした。',
+    statusSaveUnavailable: '保存できる盤面がありません。',
+    statusLoadSuccess: '保存した状態を読み込みました。',
+    statusLoadError: '保存ファイルを読み込めませんでした。',
     statsHintUsed: 'ヒント使用: {count}回',
     statsSolutionShown: '解答表示: {state}',
     statsClues: '実ヒント数: {count}',
@@ -49,11 +56,13 @@ export const I18N = {
           { label: 'ヒント数', text: '新しい盤面を作るときの初期ヒント数を選びます。' },
           { label: 'シード', text: '同じ値を入れると、同じ盤面を再生成できます。空欄ならランダムです。' },
           { label: '言語', text: '画面表示の言語を切り替えます。' },
-          { label: '遊び方', text: 'ヘルプを開きます。オフラインで読めます。' },
           { label: '新しい盤面を作成', text: '現在の設定で新しい数独を生成します。' },
           { label: '最初の状態に戻す', text: '開始時点の盤面に戻します。タイマーも最初からやり直します。' },
           { label: 'ヒントを埋める', text: '空いているマスを 1 つだけ正解で埋めます。' },
-          { label: '答えを表示', text: '完成した解答を表示します。' }
+          { label: '答えを表示', text: '完成した解答を表示します。' },
+          { label: '遊び方', text: 'ヘルプを開きます。オフラインで読めます。' },
+          { label: '保存', text: '現在の盤面、メモ、タイマー、Undo/Redo の履歴を JSON ファイルとして保存します。' },
+          { label: '読込', text: '保存した JSON ファイルを読み込み、同じ状態から再開します。' }
         ]
       },
       {
@@ -111,6 +120,8 @@ export const I18N = {
     reset: 'Reset to Start',
     hint: 'Fill a Hint',
     solve: 'Show Solution',
+    saveGame: 'Save',
+    loadGame: 'Load',
     helpButton: 'How to Play',
     helpClose: 'Close',
     padTitle: 'Number Pad',
@@ -127,6 +138,11 @@ export const I18N = {
     statusNoHint: 'No empty cell is available for a hint.',
     statusSolved: 'Congratulations! Puzzle solved. (Time: {time})',
     statusSolutionShown: 'Solution displayed.',
+    statusSaveSuccess: 'The current state has been saved.',
+    statusSaveError: 'The current state could not be saved.',
+    statusSaveUnavailable: 'There is no puzzle state to save.',
+    statusLoadSuccess: 'The saved state has been loaded.',
+    statusLoadError: 'The save file could not be loaded.',
     statsHintUsed: 'Hints used: {count}',
     statsSolutionShown: 'Solution shown: {state}',
     statsClues: 'Actual clues: {count}',
@@ -151,11 +167,13 @@ export const I18N = {
           { label: 'Clues', text: 'Sets the number of starting clues for the next puzzle.' },
           { label: 'Seed', text: 'Enter the same seed to recreate the same puzzle. Leave it blank for a random puzzle.' },
           { label: 'Language', text: 'Switches the interface language.' },
-          { label: 'How to Play', text: 'Opens the help dialog. It is available offline.' },
           { label: 'New Puzzle', text: 'Generates a fresh puzzle with the current settings.' },
           { label: 'Reset to Start', text: 'Returns the board to its initial state. The timer also starts over.' },
           { label: 'Fill a Hint', text: 'Reveals one correct value in an empty cell.' },
-          { label: 'Show Solution', text: 'Displays the completed solution.' }
+          { label: 'Show Solution', text: 'Displays the completed solution.' },
+          { label: 'How to Play', text: 'Opens the help dialog. It is available offline.' },
+          { label: 'Save', text: 'Saves the current board, notes, timer, and Undo/Redo history as a JSON file.' },
+          { label: 'Load', text: 'Loads a saved JSON file and resumes from the same state.' }
         ]
       },
       {
