@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+
 import { expect, test } from '@playwright/test';
 
 async function openEnglishPage(page) {
@@ -32,6 +34,24 @@ async function getFirstEmptyCell(page) {
   }
 
   return emptyCell;
+}
+
+async function getFirstEmptyCells(page, count) {
+  const cells = await page.locator('#board .cell').evaluateAll((allCells, amount) => (
+    allCells
+      .filter((cell) => cell.textContent.trim() === '')
+      .slice(0, amount)
+      .map((cell) => ({
+        row: cell.dataset.row,
+        col: cell.dataset.col
+      }))
+  ), count);
+
+  if (cells.length < count) {
+    throw new Error(`Only found ${cells.length} empty cells.`);
+  }
+
+  return cells;
 }
 
 async function getVisibleNotes(page, row, col) {
@@ -100,4 +120,51 @@ test('mobile viewport keeps the board and pad actions usable', async ({ page }) 
   await expect(page.locator('#pad')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Red Note' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Clear' })).toBeVisible();
+});
+
+test('save and load restore progress, notes, and undo history', async ({ page }) => {
+  await openEnglishPage(page);
+  await generatePuzzle(page, { clueCount: 24, seed: 13579 });
+
+  const [valueTarget, noteTarget] = await getFirstEmptyCells(page, 2);
+  const noteButton = page.locator('#pad .pad-action:not(.red-note)');
+  const valueCell = page.locator(`#board .cell[data-row="${valueTarget.row}"][data-col="${valueTarget.col}"]`);
+  const noteCell = page.locator(`#board .cell[data-row="${noteTarget.row}"][data-col="${noteTarget.col}"]`);
+
+  await valueCell.click();
+  await page.keyboard.press('1');
+  await expect(valueCell).toHaveText('1');
+
+  await noteCell.click();
+  await page.keyboard.press('Enter');
+  await expect(noteButton).toHaveClass(/active/);
+  await page.keyboard.press('2');
+  await expect.poll(() => getVisibleNotes(page, noteTarget.row, noteTarget.col)).toBe('2');
+
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Save' }).click();
+  const download = await downloadPromise;
+  const downloadPath = await download.path();
+  const saveText = await readFile(downloadPath, 'utf8');
+  const savedJson = JSON.parse(saveText);
+
+  expect(savedJson.format).toBe('sudoku-html-save');
+  expect(savedJson.version).toBe(1);
+
+  await generatePuzzle(page, { clueCount: 32, seed: 24680 });
+
+  await page.locator('#loadFile').setInputFiles({
+    name: 'saved-game.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(saveText, 'utf8')
+  });
+
+  await expect(page.locator('#status')).toHaveText('The saved state has been loaded.');
+  await expect(valueCell).toHaveText('1');
+  await expect.poll(() => getVisibleNotes(page, noteTarget.row, noteTarget.col)).toBe('2');
+  await expect(page.locator('#stats')).toContainText('Actual clues: 24');
+  await expect(page.locator('#stats')).toContainText('Seed: 13579');
+
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect.poll(() => getVisibleNotes(page, noteTarget.row, noteTarget.col)).toBe('');
 });

@@ -11,8 +11,13 @@
     <header class="hero">
       <h1 id="title">数独 (Sudoku)</h1>
       <div class="utility-actions">
-        <button class="ghost" id="help" type="button" aria-haspopup="dialog" aria-controls="helpOverlay" aria-expanded="false">使い方</button>
+        <div class="utility-buttons">
+          <button class="ghost" id="saveGame" type="button">状態を保存</button>
+          <button class="ghost" id="loadGame" type="button">保存を読込</button>
+          <button class="ghost" id="help" type="button" aria-haspopup="dialog" aria-controls="helpOverlay" aria-expanded="false">使い方</button>
+        </div>
         <div class="timer" id="timer" aria-live="polite">--:--</div>
+        <input id="loadFile" type="file" accept=".json,application/json" hidden />
       </div>
     </header>
 

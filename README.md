@@ -4,7 +4,7 @@ Sudoku HTML is a browser-based Sudoku game that you can play using a single `Sud
 
 | Desktop view | Mobile view |
 | --- | --- |
-| <img src="./docs/screenshot_pc_en.JPG" alt="Sudoku on desktop" width="520" /> | <img src="./docs/screenshot_smartphone_en.png" alt="Sudoku on mobile" width="160" /> |
+| <img src="./docs/screenshot_desktop_en.JPG" alt="Sudoku on desktop" width="520" /> | <img src="./docs/screenshot_mobile_en.jpeg" alt="Sudoku on mobile" width="160" /> |
 
 ## Play the Game
 
@@ -24,6 +24,7 @@ Sudoku HTML is a browser-based Sudoku game that you can play using a single `Sud
 - **Desktop / mobile UI**: The layout is designed to work comfortably on both wide desktop screens and tall mobile screens.
 - **Number of completed boards**: A single template family alone can generate more than about 609.5 billion transformed completed boards. The app uses multiple template families, so the overall variety is even larger.
 - **Board reproducibility**: Enter the same seed value with the same clue count to recreate the same puzzle, including the clue layout.
+- **Save and resume later**: You can save your current board, notes, timer, and Undo/Redo history. Loading the saved file lets you resume from the same state.
 
 ## Documents
 

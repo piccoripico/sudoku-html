@@ -1,6 +1,7 @@
 import { captureSnapshot, cloneBoard, createNotesBoard, restoreSnapshot } from './lib/history.js';
 import { I18N, translate } from './lib/i18n.js';
 import { isTypingTarget } from './lib/input.js';
+import { createSaveData, createSaveFilename, parseSaveText } from './lib/persistence.js';
 import { generatePuzzle } from './lib/sudoku.js';
 import { createTimerState, getElapsedMs, pauseTimer, startTimer } from './lib/timer.js';
 
@@ -17,6 +18,12 @@ const helpTitleEl = document.getElementById('helpTitle');
 const helpDialogEl = document.getElementById('helpDialog');
 const helpContentEl = document.getElementById('helpContent');
 const helpCloseEl = document.getElementById('helpClose');
+const clueCountEl = document.getElementById('clueCount');
+const seedInputEl = document.getElementById('seed');
+const langSelectEl = document.getElementById('lang');
+const saveButtonEl = document.getElementById('saveGame');
+const loadButtonEl = document.getElementById('loadGame');
+const loadFileEl = document.getElementById('loadFile');
 
 const state = {
   puzzle: [],
@@ -43,6 +50,7 @@ let noteToggleEl = null;
 let highlightNoteToggleEl = null;
 let clearPadButtonEl = null;
 let timerInterval = null;
+let statusResetTimeout = null;
 
 function t(key, vars = {}) {
   return translate(state.currentLang, key, vars);
@@ -61,6 +69,40 @@ function formatTime(ms) {
   const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
   const seconds = (totalSeconds % 60).toString().padStart(2, '0');
   return `${minutes}:${seconds}`;
+}
+
+function rebuildDerivedStateFromBoards() {
+  state.givens = new Set();
+  state.solutionDigitMap = new Map();
+
+  for (let value = 1; value <= 9; value += 1) {
+    state.solutionDigitMap.set(value, []);
+  }
+
+  for (let row = 0; row < 9; row += 1) {
+    for (let col = 0; col < 9; col += 1) {
+      if (state.puzzle[row][col]) {
+        state.givens.add(cellKey(row, col));
+      }
+
+      const solutionValue = state.solution[row][col];
+      if (solutionValue) {
+        state.solutionDigitMap.get(solutionValue).push([row, col]);
+      }
+    }
+  }
+}
+
+function syncPuzzleInputs() {
+  const hasClueOption = Array.from(clueCountEl.options).some((option) => (
+    Number(option.value) === state.selectedClueCount
+  ));
+
+  if (hasClueOption) {
+    clueCountEl.value = String(state.selectedClueCount);
+  }
+
+  seedInputEl.value = state.selectedSeedWasRandom ? '' : String(state.selectedSeedRaw ?? '');
 }
 
 function syncTimerInterval() {
@@ -155,10 +197,9 @@ function restoreState(snapshot) {
 }
 
 function updateClueOptionLabels() {
-  const select = document.getElementById('clueCount');
   const localized = I18N[state.currentLang].clueOptionLabels || {};
 
-  for (const option of select.options) {
+  for (const option of clueCountEl.options) {
     const value = Number(option.value);
     option.textContent = localized[value] || String(value);
   }
@@ -175,6 +216,22 @@ function updateStats() {
 function setStatus(message, type = '') {
   statusEl.textContent = message;
   statusEl.className = `status ${type}`.trim();
+}
+
+function clearStatusFlash() {
+  if (statusResetTimeout) {
+    clearTimeout(statusResetTimeout);
+    statusResetTimeout = null;
+  }
+}
+
+function flashStatus(message, type = '', duration = 2200) {
+  clearStatusFlash();
+  setStatus(message, type);
+  statusResetTimeout = setTimeout(() => {
+    statusResetTimeout = null;
+    updateStatus();
+  }, duration);
 }
 
 function renderHelp() {
@@ -251,20 +308,21 @@ function applyLanguage(lang) {
   document.documentElement.lang = state.currentLang;
   document.title = t('title');
 
-  const langSelect = document.getElementById('lang');
-  if (langSelect.value !== state.currentLang) {
-    langSelect.value = state.currentLang;
+  if (langSelectEl.value !== state.currentLang) {
+    langSelectEl.value = state.currentLang;
   }
 
   document.getElementById('title').textContent = t('title');
   document.getElementById('clueCountLabel').textContent = t('clueLabel');
   document.getElementById('seedLabel').textContent = t('seedLabel');
   document.getElementById('langLabel').textContent = t('langLabel');
-  document.getElementById('seed').placeholder = t('seedPlaceholder');
+  seedInputEl.placeholder = t('seedPlaceholder');
   document.getElementById('newGame').textContent = t('newGame');
   document.getElementById('reset').textContent = t('reset');
   document.getElementById('hint').textContent = t('hint');
   document.getElementById('solve').textContent = t('solve');
+  saveButtonEl.textContent = t('saveGame');
+  loadButtonEl.textContent = t('loadGame');
   document.getElementById('padTitle').textContent = t('padTitle');
   document.getElementById('hintText').textContent = t('hintText');
   boardEl.setAttribute('aria-label', t('boardAriaLabel'));
@@ -286,7 +344,7 @@ function initLanguage() {
 
   applyLanguage(preferred);
 
-  document.getElementById('lang').addEventListener('change', (event) => {
+  langSelectEl.addEventListener('change', (event) => {
     applyLanguage(event.target.value);
     localStorage.setItem('sudoku_lang', state.currentLang);
   });
@@ -565,6 +623,8 @@ function isSolved() {
 }
 
 function updateStatus() {
+  clearStatusFlash();
+
   if (!state.current.length || !state.solution.length) {
     setStatus(t('statusLoading'));
     return;
@@ -616,9 +676,8 @@ function resetBoard(pushHistory = true, restartTimer = false) {
 }
 
 function loadNewPuzzle() {
-  const clues = Number(document.getElementById('clueCount').value);
-  const seedInput = document.getElementById('seed');
-  const seedValueRaw = seedInput.value.trim();
+  const clues = Number(clueCountEl.value);
+  const seedValueRaw = seedInputEl.value.trim();
   const seedWasRandom = seedValueRaw === '';
   const seedValue = seedWasRandom
     ? Math.floor(Math.random() * 1_000_000_000).toString()
@@ -641,19 +700,8 @@ function loadNewPuzzle() {
   state.selectedClueCount = actualClueCount;
   state.selectedSeedRaw = seedValue;
   state.selectedSeedWasRandom = seedWasRandom;
-
-  for (let value = 1; value <= 9; value += 1) {
-    state.solutionDigitMap.set(value, []);
-  }
-
-  for (let row = 0; row < 9; row += 1) {
-    for (let col = 0; col < 9; col += 1) {
-      if (state.puzzle[row][col]) {
-        state.givens.add(cellKey(row, col));
-      }
-      state.solutionDigitMap.get(state.solution[row][col]).push([row, col]);
-    }
-  }
+  rebuildDerivedStateFromBoards();
+  syncPuzzleInputs();
 
   toggleNoteMode(false);
   state.selectedCell = { row: 0, col: 0 };
@@ -661,6 +709,81 @@ function loadNewPuzzle() {
   updateStats();
   resetAndStartTimer();
   updateStatus();
+}
+
+function applyLoadedGame(saveData) {
+  const { game } = saveData;
+
+  state.puzzle = game.puzzle;
+  state.solution = game.solution;
+  state.current = game.current;
+  state.notes = game.notes;
+  state.history = game.history;
+  state.future = game.future;
+  state.hintCount = game.hintCount;
+  state.solutionRevealed = game.solutionRevealed;
+  state.noteMode = game.noteMode;
+  state.highlightNoteMode = game.highlightNoteMode;
+  state.selectedCell = game.selectedCell;
+  state.selectedClueCount = game.selectedClueCount;
+  state.selectedSeedRaw = game.selectedSeedRaw;
+  state.selectedSeedWasRandom = game.selectedSeedWasRandom;
+
+  rebuildDerivedStateFromBoards();
+  syncPuzzleInputs();
+  restoreSnapshot(state, {
+    current: state.current,
+    notes: state.notes,
+    hintCount: state.hintCount,
+    solutionRevealed: state.solutionRevealed,
+    noteMode: state.noteMode,
+    highlightNoteMode: state.highlightNoteMode,
+    selectedCell: state.selectedCell,
+    timer: game.timer
+  });
+  syncPadModeButtons();
+  syncTimerInterval();
+  updateTimerDisplay();
+  renderBoard();
+  updateStats();
+  flashStatus(t('statusLoadSuccess'), 'success');
+}
+
+function saveGameToFile() {
+  if (!state.current.length || !state.solution.length) {
+    flashStatus(t('statusSaveUnavailable'), 'warning');
+    return;
+  }
+
+  try {
+    const saveData = createSaveData(state);
+    const blob = new Blob([JSON.stringify(saveData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = createSaveFilename();
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+    flashStatus(t('statusSaveSuccess'), 'success');
+  } catch (error) {
+    console.error(error);
+    flashStatus(t('statusSaveError'), 'warning');
+  }
+}
+
+async function loadGameFromFile(file) {
+  try {
+    const text = await file.text();
+    const saveData = parseSaveText(text);
+    applyLoadedGame(saveData);
+  } catch (error) {
+    console.error(error);
+    flashStatus(t('statusLoadError'), 'warning');
+  } finally {
+    loadFileEl.value = '';
+  }
 }
 
 function revealHint() {
@@ -784,6 +907,14 @@ document.getElementById('newGame').addEventListener('click', loadNewPuzzle);
 document.getElementById('reset').addEventListener('click', () => resetBoard(true, true));
 document.getElementById('hint').addEventListener('click', revealHint);
 document.getElementById('solve').addEventListener('click', showSolution);
+saveButtonEl.addEventListener('click', saveGameToFile);
+loadButtonEl.addEventListener('click', () => loadFileEl.click());
+loadFileEl.addEventListener('change', (event) => {
+  const [file] = event.target.files || [];
+  if (file) {
+    loadGameFromFile(file);
+  }
+});
 helpButtonEl.addEventListener('click', () => setHelpOpen(true));
 helpCloseEl.addEventListener('click', () => setHelpOpen(false));
 helpOverlayEl.addEventListener('click', (event) => {

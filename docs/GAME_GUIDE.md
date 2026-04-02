@@ -2,7 +2,7 @@
 
 | Desktop view | Mobile view |
 | --- | --- |
-| <img src="./screenshot_pc_en.JPG" alt="Sudoku on desktop" width="520" /> | <img src="./screenshot_smartphone_en.png" alt="Sudoku on mobile" width="160" /> |
+| <img src="./screenshot_desktop_en.JPG" alt="Sudoku on desktop" width="520" /> | <img src="./screenshot_mobile_en.jpeg" alt="Sudoku on mobile" width="160" /> |
 
 ## How to Play
 
@@ -17,11 +17,13 @@
 - `Clues`: Sets the number of starting clues for the next puzzle.
 - `Seed`: Enter the same seed to recreate the same puzzle. Leave it empty for a random puzzle.
 - `Language`: Switches the interface language.
-- `How to Play`: Opens the help dialog. It is available offline.
 - `New Puzzle`: Generates a new puzzle with the current clue count and seed.
 - `Reset to Start`: Returns the board to its initial state. The timer also starts over.
 - `Fill a Hint`: Reveals one correct value in an empty cell.
 - `Show Solution`: Displays the completed solution.
+- `Save`: Saves the current board, notes, timer, and Undo/Redo history as a JSON file.
+- `Load`: Loads a saved JSON file and resumes from the same state.
+- `How to Play`: Opens the help dialog. It is available offline.
 
 ## Controls (Mouse / Tap)
 
