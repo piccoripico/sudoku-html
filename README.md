@@ -22,7 +22,7 @@ Sudoku HTML is a browser-based Sudoku game that you can play using a single `Sud
 - **Portable**: The entire app is packaged into a single `Sudoku.html` file, so you can keep it on your computer or phone and take it anywhere.
 - **Offline**: The app runs offline, so you can play without an internet connection.
 - **Desktop / mobile UI**: The layout is designed to work comfortably on both wide desktop screens and tall mobile screens.
-- **Number of completed boards**: This implementation can generate about 609.5 billion distinct completed boards.
+- **Number of completed boards**: A single template family alone can generate more than about 609.5 billion transformed completed boards. The app uses multiple template families, so the overall variety is even larger.
 - **Board reproducibility**: Enter the same seed value with the same clue count to recreate the same puzzle, including the clue layout.
 
 ## Documents

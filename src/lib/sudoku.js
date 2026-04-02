@@ -1,30 +1,13 @@
+import { PUZZLE_TEMPLATES } from './puzzle-templates.js';
+
 function parseBoard(rows) {
   return rows.map((row) => row.split('').map(Number));
 }
 
-const BASE_PUZZLE = parseBoard([
-  '000000010',
-  '400000000',
-  '020000000',
-  '000050407',
-  '008000300',
-  '001090000',
-  '300400200',
-  '050100000',
-  '000806000'
-]);
-
-const BASE_SOLUTION = parseBoard([
-  '693784512',
-  '487512936',
-  '125963874',
-  '932651487',
-  '568247391',
-  '741398625',
-  '319475268',
-  '856129743',
-  '274836159'
-]);
+const TEMPLATE_BOARDS = PUZZLE_TEMPLATES.map(({ puzzle, solution }) => ({
+  puzzleBoard: parseBoard(Array.from({ length: 9 }, (_, index) => puzzle.slice(index * 9, index * 9 + 9))),
+  solutionBoard: parseBoard(Array.from({ length: 9 }, (_, index) => solution.slice(index * 9, index * 9 + 9)))
+}));
 
 function hashSeed(seedInput) {
   const seed = String(seedInput);
@@ -236,9 +219,15 @@ function createAxisOrder(rand) {
   });
 }
 
-function transformBoard(board, digitMap, rowOrder, colOrder) {
+function transposeBoard(board) {
+  return board[0].map((_, col) => board.map((row) => row[col]));
+}
+
+function transformBoard(board, digitMap, rowOrder, colOrder, shouldTranspose = false) {
+  const sourceBoard = shouldTranspose ? transposeBoard(board) : board;
+
   return rowOrder.map((row) => colOrder.map((col) => {
-    const value = board[row][col];
+    const value = sourceBoard[row][col];
     return value === 0 ? 0 : digitMap[value];
   }));
 }
@@ -282,14 +271,18 @@ function addCluesToMatch(puzzleBoard, solutionBoard, clueCount, rand) {
 
 export function generatePuzzle(clues, seedValue) {
   const clueCount = clampClues(clues);
-  const transformRand = createRng(`${seedValue}:template`);
+  const templateRand = createRng(`${seedValue}:template`);
+  const templateIndex = Math.floor(templateRand() * TEMPLATE_BOARDS.length);
+  const shouldTranspose = templateRand() < 0.5;
+  const template = TEMPLATE_BOARDS[templateIndex];
+  const transformRand = createRng(`${seedValue}:transform:${templateIndex}:${shouldTranspose ? 't' : 'n'}`);
   const fillRand = createRng(`${seedValue}:fill:${clueCount}`);
   const digitMap = createDigitMap(transformRand);
   const rowOrder = createAxisOrder(transformRand);
   const colOrder = createAxisOrder(transformRand);
 
-  const solutionBoard = transformBoard(BASE_SOLUTION, digitMap, rowOrder, colOrder);
-  const puzzleBoard = transformBoard(BASE_PUZZLE, digitMap, rowOrder, colOrder);
+  const solutionBoard = transformBoard(template.solutionBoard, digitMap, rowOrder, colOrder, shouldTranspose);
+  const puzzleBoard = transformBoard(template.puzzleBoard, digitMap, rowOrder, colOrder, shouldTranspose);
   const actualClueCount = addCluesToMatch(puzzleBoard, solutionBoard, clueCount, fillRand);
 
   return {

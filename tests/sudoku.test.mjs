@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import { captureSnapshot, createNotesBoard, restoreSnapshot } from '../src/lib/history.js';
 import { isTypingTarget } from '../src/lib/input.js';
+import { PUZZLE_TEMPLATES } from '../src/lib/puzzle-templates.js';
 import { countSolutions, createRng, generatePuzzle } from '../src/lib/sudoku.js';
 import { createTimerState, getElapsedMs, startTimer } from '../src/lib/timer.js';
 
@@ -34,6 +35,21 @@ test('generatePuzzle returns exact requested clue counts across supported option
     const result = generatePuzzle(clues, '7');
     assert.equal(result.actualClueCount, clues);
     assert.equal(countSolutions(result.puzzleBoard.map((row) => [...row]), 3), 1);
+  }
+});
+
+test('puzzle templates provide multiple unique 17-clue starting points', () => {
+  assert.ok(PUZZLE_TEMPLATES.length >= 16);
+
+  for (const template of PUZZLE_TEMPLATES) {
+    const clueCount = Array.from(template.puzzle).filter((value) => value !== '0').length;
+    const board = Array.from({ length: 9 }, (_, row) => (
+      template.puzzle.slice(row * 9, row * 9 + 9).split('').map(Number)
+    ));
+
+    assert.equal(clueCount, 17);
+    assert.equal(countSolutions(board, 3), 1);
+    assert.equal(template.solution.includes('0'), false);
   }
 });
 
