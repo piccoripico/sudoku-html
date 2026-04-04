@@ -12,15 +12,15 @@ Sudoku HTML is a browser-based Sudoku game that you can play using a single `Sud
 
 - Open the downloaded `Sudoku.html` directly in your browser to play offline.
 
-**Play online**: <https://piccoripico.github.io/sudoku-html/>
-
-- You can also open the same program online.
-- After the page has loaded, you can continue playing without an internet connection during that session.
+> **Play online**: <https://piccoripico.github.io/sudoku-html/>
+>
+> - You can also open the same program online.
+> - After the page has loaded, you can continue playing without an internet connection during that session.
 
 ## Highlights
 
 - **Portable**: The entire app is packaged into a single `Sudoku.html` file, so you can keep it on your computer or phone and take it anywhere.
-- **Offline**: The app runs offline, so you can play without an internet connection.
+- **Offline**: The app runs offline, so you can play without an internet connection after downloading `Sudoku.html`.
 - **Desktop / mobile UI**: The layout is designed to work comfortably on both wide desktop screens and tall mobile screens.
 - **Number of completed boards**: A single template family alone can generate more than about 609.5 billion transformed completed boards. The app uses multiple template families, so the overall variety is even larger.
 - **Board reproducibility**: Enter the same seed value with the same clue count to recreate the same puzzle, including the clue layout.
@@ -48,7 +48,7 @@ Sudoku HTML is a browser-based Sudoku game that you can play using a single `Sud
 4. The first time you use browser tests, run `npm run test:e2e:install`.
 5. Run `npm run test:e2e` for browser smoke tests, or `npm run verify` for the full local check.
 
-`dist/` is intentionally excluded from Git. The downloadable `Sudoku.html` file is generated from source by the release workflow.
+`dist/Sudoku.html` is generated from source by the release workflow.
 
 ## Automation
 
