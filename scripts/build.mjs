@@ -1,10 +1,12 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const srcDir = path.join(rootDir, 'src');
+const extensionSrcDir = path.join(rootDir, 'src-extension');
 const distDir = path.join(rootDir, 'dist');
+const extensionDistDir = path.join(distDir, 'extension');
 
 const importPattern = /^\s*import\s+[^'"]+['"](.+)['"];\s*$/gm;
 
@@ -59,7 +61,7 @@ async function bundleJavaScript(entryFile) {
   ].join('\n');
 }
 
-async function build() {
+async function buildSingleFileHtml() {
   const htmlTemplate = normalizeLineEndings(await readFile(path.join(srcDir, 'index.html'), 'utf8'));
   const cssSource = normalizeLineEndings(await readFile(path.join(srcDir, 'styles.css'), 'utf8'));
   const jsSource = await bundleJavaScript(path.join(srcDir, 'main.js'));
@@ -72,4 +74,12 @@ async function build() {
   await writeFile(path.join(distDir, 'Sudoku.html'), output, 'utf8');
 }
 
-await build();
+async function buildExtension() {
+  await rm(extensionDistDir, { recursive: true, force: true });
+  await mkdir(extensionDistDir, { recursive: true });
+  await cp(srcDir, extensionDistDir, { recursive: true });
+  await cp(extensionSrcDir, extensionDistDir, { recursive: true });
+}
+
+await buildSingleFileHtml();
+await buildExtension();
