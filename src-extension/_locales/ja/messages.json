@@ -1,0 +1,14 @@
+{
+  "extensionName": {
+    "message": "いつでも数独"
+  },
+  "extensionShortName": {
+    "message": "数独"
+  },
+  "extensionDescription": {
+    "message": "ツールバーからワンクリックで起動し、オフラインでいつでも数独を遊べます。"
+  },
+  "extensionActionTitle": {
+    "message": "「いつでも数独」を開く"
+  }
+}

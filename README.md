@@ -1,6 +1,6 @@
 # Sudoku HTML
 
-Sudoku HTML is a browser-based Sudoku game that you can play using a single `Sudoku.html` file. This repository contains the split source code, tests, build script, documentation, and GitHub Actions workflows used for online publishing and release distribution.
+Sudoku HTML is a browser-based Sudoku game that you can play as a single `Sudoku.html` file, from the online page, or as a browser extension. This repository contains the split source code, extension packaging files, tests, build script, documentation, and GitHub Actions workflows used for online publishing and release distribution.
 
 | Desktop view | Mobile view |
 | --- | --- |
@@ -8,37 +8,31 @@ Sudoku HTML is a browser-based Sudoku game that you can play using a single `Sud
 
 ## Play the Game
 
-**Download the HTML file**: [Sudoku.html](https://github.com/piccoripico/sudoku-html/releases/latest/download/Sudoku.html)
+Choose the version that fits how you want to play:
 
-- Open the downloaded `Sudoku.html` directly in your browser to play offline.
-
-> **Play online**: <https://piccoripico.github.io/sudoku-html/>
->
-> - You can also open the same program online.
-> - After the page has loaded, you can continue playing without an internet connection during that session.
+- **Download the HTML file**: [Sudoku.html](https://github.com/piccoripico/sudoku-html/releases/latest/download/Sudoku.html)  
+  Open the downloaded file directly in your browser to play offline.
+- **Play online**: <https://piccoripico.github.io/sudoku-html/>  
+  Open the same game online. After the page has loaded, you can continue playing without an internet connection during that session.
+- **Install the Edge extension**: <https://microsoftedge.microsoft.com/addons/detail/anytime-sudoku/klfjhkjdefooohdgjcfamhoghogfcdaj>  
+  Once installed, click the toolbar icon to open Anytime Sudoku in a regular browser tab and play without an internet connection.
 
 ## Highlights
 
 - **Portable**: The entire app is packaged into a single `Sudoku.html` file, so you can keep it on your computer or phone and take it anywhere.
-- **Offline**: The app runs offline, so you can play without an internet connection after downloading `Sudoku.html`.
+- **Offline**: The app runs offline, so you can play without an internet connection after downloading `Sudoku.html` or installing the extension.
 - **Desktop / mobile UI**: The layout is designed to work comfortably on both wide desktop screens and tall mobile screens.
 - **Number of completed boards**: A single template family alone can generate more than about 609.5 billion transformed completed boards. The app uses multiple template families, so the overall variety is even larger.
 - **Board reproducibility**: Enter the same seed value with the same clue count to recreate the same puzzle, including the clue layout.
-- **Save and resume later**: You can save your current board, notes, timer, and Undo/Redo history. Loading the saved file lets you resume from the same state.
+- **Notes, hints, and undo history**: Use notes, red notes, hints, solution display, and Undo/Redo while solving.
+- **Save and resume later**: You can save your current board, notes, timer, and Undo/Redo history as a local JSON file. Loading the saved file lets you resume from the same state.
+- **No account or external service**: There are no ads, payments, accounts, analytics, gameplay data uploads, or user data collection.
 
 ## Documents
 
 - [Repository Guide (Japanese)](./README.ja.md)
 - [Game Guide (English)](./docs/GAME_GUIDE.md)
 - [Game Guide (Japanese)](./docs/GAME_GUIDE.ja.md)
-
-## Repository Structure
-
-- [`src/`](./src): HTML, CSS, and JavaScript source files
-- [`tests/`](./tests): Automated tests for puzzle generation and state handling
-- [`scripts/build.mjs`](./scripts/build.mjs): Build script that converts the split source files into a single `dist/Sudoku.html`
-- [`docs/`](./docs): Screenshots and end-user documentation
-- [`.github/workflows/`](./.github/workflows): Automation for CI, Pages, and releases
 
 ## Development
 
@@ -48,7 +42,7 @@ Sudoku HTML is a browser-based Sudoku game that you can play using a single `Sud
 4. The first time you use browser tests, run `npm run test:e2e:install`.
 5. Run `npm run test:e2e` for browser smoke tests, or `npm run verify` for the full local check.
 
-`dist/Sudoku.html` is generated from source by the release workflow.
+`npm run build` generates `dist/Sudoku.html` and the unpacked extension package at `dist/extension`.
 
 ## Automation
 
