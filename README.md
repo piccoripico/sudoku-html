@@ -14,7 +14,7 @@ Choose the version that fits how you want to play:
   Open the downloaded file directly in your browser to play offline.
 - **Play online**: <https://piccoripico.github.io/sudoku-html/>  
   Open the same game online. After the page has loaded, you can continue playing without an internet connection during that session.
-- **Install the Edge extension**: <https://microsoftedge.microsoft.com/addons/detail/anytime-sudoku/klfjhkjdefooohdgjcfamhoghogfcdaj>  
+- **Install the Edge extension**: <https://microsoftedge.microsoft.com/addons/detail/cgcjekopfndblbbdokilihilppanmkpo>  
   Once installed, click the toolbar icon to open Anytime Sudoku in a regular browser tab and play without an internet connection.
 
 ## Highlights
