@@ -14,7 +14,7 @@
   ダウンロードしたファイルをブラウザで直接開けば、オフラインで遊べます。
 - **オンラインで遊ぶ**: <https://piccoripico.github.io/sudoku-html/>  
   同じゲームをオンラインで開けます。ページを開いた後は、そのセッション中、インターネット接続なしで遊べます。
-- **Edge拡張機能をインストールする**: <https://microsoftedge.microsoft.com/addons/detail/anytime-sudoku/klfjhkjdefooohdgjcfamhoghogfcdaj>  
+- **Edge拡張機能をインストールする**: <https://microsoftedge.microsoft.com/addons/detail/cgcjekopfndblbbdokilihilppanmkpo>  
   インストールしておけば、ツールバーアイコンからワンクリックで「いつでも数独」を通常のブラウザタブに開き、インターネット接続なしで遊べます。
 
 ## 特徴
