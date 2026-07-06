@@ -1,6 +1,6 @@
 # 数独 (Sudoku) HTML
 
-数独 (Sudoku) HTML は、単一の `Sudoku.html` ファイル、オンラインページ、ブラウザ拡張機能のいずれでも遊べるブラウザ向け数独ゲームです。このリポジトリには、分割されたソースコード、拡張機能用パッケージ、テスト、ビルドスクリプト、ドキュメント、そしてオンライン公開やリリース配布に使う GitHub Actions workflow が含まれています。
+数独 (Sudoku) HTML は、単一の `Sudoku.html` ファイル、オンラインページ、ChromeまたはEdgeの拡張機能のいずれでも遊べるブラウザ向け数独ゲームです。このリポジトリには、分割されたソースコード、拡張機能用パッケージ、テスト、ビルドスクリプト、ドキュメント、そしてオンライン公開やリリース配布に使う GitHub Actions workflow が含まれています。
 
 | デスクトップ表示 | モバイル表示 |
 | --- | --- |
@@ -14,13 +14,15 @@
   ダウンロードしたファイルをブラウザで直接開けば、オフラインで遊べます。
 - **オンラインで遊ぶ**: <https://piccoripico.github.io/sudoku-html/>  
   同じゲームをオンラインで開けます。ページを開いた後は、そのセッション中、インターネット接続なしで遊べます。
-- **Edge拡張機能をインストールする**: <https://microsoftedge.microsoft.com/addons/detail/cgcjekopfndblbbdokilihilppanmkpo>  
-  インストールしておけば、ツールバーアイコンからワンクリックで「いつでも数独」を通常のブラウザタブに開き、インターネット接続なしで遊べます。
+- **ブラウザ拡張機能をインストールする**:  
+  <a href="https://chromewebstore.google.com/detail/one-click-sudoku/mobbahgfmncnppilfpnfpggmlihfghfc"><img src="./docs/store-assets/badges/chrome-web-store-badge.png" alt="Chrome Web Store で入手" height="48" /></a>
+  <a href="https://microsoftedge.microsoft.com/addons/detail/cgcjekopfndblbbdokilihilppanmkpo"><img src="./docs/store-assets/badges/microsoft-edge-addons-badge-ja.png" alt="Microsoft Edge から入手" height="48" /></a><br>
+  インストールしておけば、ツールバーアイコンから「ワンクリック数独」を通常のブラウザタブに開き、インターネット接続なしで遊べます。
 
 ## 特徴
 
 - **ポータブル**: アプリ全体が 1 つの `Sudoku.html` にまとまっているので、パソコンやスマホに保存しておけば、どこにでも持ち運べます。
-- **オフライン**: プログラムはオフラインで動くので、 `Sudoku.html` をダウンロードした後や拡張機能をインストールした後は、インターネット接続なしで遊べます。
+- **オフライン**: プログラムはオフラインで動くので、 `Sudoku.html` をダウンロードした後やChromeまたはEdgeの拡張機能をインストールした後は、インターネット接続なしで遊べます。
 - **デスクトップ / モバイル UI**: 横幅の広いデスクトップ画面でも、縦長のモバイル画面でも使いやすいレイアウトです。
 - **完成盤面の数**: 1つのテンプレート系統だけでも、変換によって少なくとも約6095億通りの完成盤面を生成できます。実際の実装では複数のテンプレート系統を使うため、全体のバリエーションはさらに多くなります。
 - **盤面の再現**: 同じシード値を入力して盤面を作成すれば、ヒントの配置も含めて、同じ盤面を再現できます。

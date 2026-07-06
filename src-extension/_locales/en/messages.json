@@ -1,6 +1,6 @@
 {
   "extensionName": {
-    "message": "Anytime Sudoku"
+    "message": "One-Click Sudoku"
   },
   "extensionShortName": {
     "message": "Sudoku"
@@ -9,6 +9,6 @@
     "message": "Launch Sudoku in one click from the toolbar and play offline anytime."
   },
   "extensionActionTitle": {
-    "message": "Open Anytime Sudoku"
+    "message": "Open One-Click Sudoku"
   }
 }
