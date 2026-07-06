@@ -1,6 +1,6 @@
 # Sudoku HTML
 
-Sudoku HTML is a browser-based Sudoku game that you can play as a single `Sudoku.html` file, from the online page, or as a browser extension. This repository contains the split source code, extension packaging files, tests, build script, documentation, and GitHub Actions workflows used for online publishing and release distribution.
+Sudoku HTML is a browser-based Sudoku game that you can play as a single `Sudoku.html` file, from the online page, or as a Chrome or Edge extension. This repository contains the split source code, extension packaging files, tests, build script, documentation, and GitHub Actions workflows used for online publishing and release distribution.
 
 | Desktop view | Mobile view |
 | --- | --- |
@@ -14,13 +14,15 @@ Choose the version that fits how you want to play:
   Open the downloaded file directly in your browser to play offline.
 - **Play online**: <https://piccoripico.github.io/sudoku-html/>  
   Open the same game online. After the page has loaded, you can continue playing without an internet connection during that session.
-- **Install the Edge extension**: <https://microsoftedge.microsoft.com/addons/detail/cgcjekopfndblbbdokilihilppanmkpo>  
-  Once installed, click the toolbar icon to open Anytime Sudoku in a regular browser tab and play without an internet connection.
+- **Install the browser extension**:  
+  <a href="https://chromewebstore.google.com/detail/one-click-sudoku/mobbahgfmncnppilfpnfpggmlihfghfc"><img src="./docs/store-assets/badges/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" height="48" /></a>
+  <a href="https://microsoftedge.microsoft.com/addons/detail/cgcjekopfndblbbdokilihilppanmkpo"><img src="./docs/store-assets/badges/microsoft-edge-addons-badge-en.png" alt="Get it from Microsoft Edge" height="48" /></a><br>
+  Once installed, click the toolbar icon to open One-Click Sudoku in a regular browser tab and play without an internet connection.
 
 ## Highlights
 
 - **Portable**: The entire app is packaged into a single `Sudoku.html` file, so you can keep it on your computer or phone and take it anywhere.
-- **Offline**: The app runs offline, so you can play without an internet connection after downloading `Sudoku.html` or installing the extension.
+- **Offline**: The app runs offline, so you can play without an internet connection after downloading `Sudoku.html` or installing the Chrome or Edge extension.
 - **Desktop / mobile UI**: The layout is designed to work comfortably on both wide desktop screens and tall mobile screens.
 - **Number of completed boards**: A single template family alone can generate more than about 609.5 billion transformed completed boards. The app uses multiple template families, so the overall variety is even larger.
 - **Board reproducibility**: Enter the same seed value with the same clue count to recreate the same puzzle, including the clue layout.
