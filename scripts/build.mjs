@@ -8,7 +8,7 @@ const extensionSrcDir = path.join(rootDir, 'src-extension');
 const distDir = path.join(rootDir, 'dist');
 const extensionDistDir = path.join(distDir, 'extension');
 
-const importPattern = /^\s*import\s+[^'"]+['"](.+)['"];\s*$/gm;
+const importPattern = /^\s*import\s+[^'\"]+['\"](.+)['\"];\s*$/gm;
 
 function normalizeLineEndings(source) {
   return source.replace(/\r\n/g, '\n');
@@ -63,12 +63,16 @@ async function bundleJavaScript(entryFile) {
 
 async function buildSingleFileHtml() {
   const htmlTemplate = normalizeLineEndings(await readFile(path.join(srcDir, 'index.html'), 'utf8'));
+  const themeInitSource = normalizeLineEndings(await readFile(path.join(srcDir, 'theme-init.js'), 'utf8'));
   const cssSource = normalizeLineEndings(await readFile(path.join(srcDir, 'styles.css'), 'utf8'));
   const jsSource = await bundleJavaScript(path.join(srcDir, 'main.js'));
+  const themeJsSource = await bundleJavaScript(path.join(srcDir, 'theme.js'));
 
   const output = htmlTemplate
+    .replace('<script src="./theme-init.js"></script>', `<script>\n${escapeInlineScript(themeInitSource)}\n</script>`)
     .replace('<link rel="stylesheet" href="./styles.css" />', `<style>\n${escapeInlineStyle(cssSource)}\n</style>`)
-    .replace('<script type="module" src="./main.js"></script>', `<script>\n${escapeInlineScript(jsSource)}\n</script>`);
+    .replace('<script type="module" src="./main.js"></script>', `<script>\n${escapeInlineScript(jsSource)}\n</script>`)
+    .replace('<script type="module" src="./theme.js"></script>', `<script>\n${escapeInlineScript(themeJsSource)}\n</script>`);
 
   await mkdir(distDir, { recursive: true });
   await writeFile(path.join(distDir, 'Sudoku.html'), output, 'utf8');

@@ -24,6 +24,7 @@ Choose the version that fits how you want to play:
 - **Portable**: The entire app is packaged into a single `Sudoku.html` file, so you can keep it on your computer or phone and take it anywhere.
 - **Offline**: The app runs offline, so you can play without an internet connection after downloading `Sudoku.html` or installing the Chrome or Edge extension.
 - **Desktop / mobile UI**: The layout is designed to work comfortably on both wide desktop screens and tall mobile screens.
+- **Light and dark themes**: Choose System, Light, or Dark appearance. System mode follows your operating system color scheme automatically.
 - **Number of completed boards**: A single template family alone can generate more than about 609.5 billion transformed completed boards. The app uses multiple template families, so the overall variety is even larger.
 - **Board reproducibility**: Enter the same seed value with the same clue count to recreate the same puzzle, including the clue layout.
 - **Notes, hints, and undo history**: Use notes, red notes, hints, solution display, and Undo/Redo while solving.

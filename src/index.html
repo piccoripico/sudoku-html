@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>数独 (Sudoku)</title>
+  <script src="./theme-init.js"></script>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
@@ -58,6 +59,15 @@
             <option value="en">English</option>
           </select>
         </div>
+
+        <div class="field">
+          <label id="themeLabel" for="theme">表示</label>
+          <select id="theme">
+            <option value="system">システム設定</option>
+            <option value="light">ライト</option>
+            <option value="dark">ダーク</option>
+          </select>
+        </div>
       </div>
 
       <div class="action-row primary-actions">
@@ -95,5 +105,6 @@
   </main>
 
   <script type="module" src="./main.js"></script>
+  <script type="module" src="./theme.js"></script>
 </body>
 </html>

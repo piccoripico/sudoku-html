@@ -17,6 +17,7 @@
 - `Clues`: Sets the number of starting clues for the next puzzle.
 - `Seed`: Enter the same seed to recreate the same puzzle. Leave it empty for a random puzzle.
 - `Language`: Switches the interface language.
+- `Theme`: Choose `System`, `Light`, or `Dark`. `System` follows your operating system color scheme automatically.
 - `New Puzzle`: Generates a new puzzle with the current clue count and seed.
 - `Reset to Start`: Returns the board to its initial state. The timer also starts over.
 - `Fill a Hint`: Reveals one correct value in an empty cell.

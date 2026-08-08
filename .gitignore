@@ -2,7 +2,7 @@ dist/
 node_modules/
 test-results/
 playwright-report/
-docs/EXTENSION_STORE_SUBMISSION.md
+docs/EXTENSION_STORE_SUBMISSION/
 
 .DS_Store
 Thumbs.db
