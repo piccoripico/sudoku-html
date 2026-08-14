@@ -4,7 +4,7 @@ Sudoku HTML is a browser-based Sudoku game that you can play as a single `Sudoku
 
 | Desktop view | Mobile view |
 | --- | --- |
-| <img src="./docs/screenshot_desktop_en.JPG" alt="Sudoku on desktop" width="520" /> | <img src="./docs/screenshot_mobile_en.jpeg" alt="Sudoku on mobile" width="160" /> |
+| <img src="./docs/screenshot_desktop_en.jpeg" alt="Sudoku on desktop" width="520" /> | <img src="./docs/screenshot_mobile_en.jpeg" alt="Sudoku on mobile" width="160" /> |
 
 ## Play the Game
 
@@ -25,6 +25,7 @@ Choose the version that fits how you want to play:
 - **Offline**: The app runs offline, so you can play without an internet connection after downloading `Sudoku.html` or installing the Chrome or Edge extension.
 - **Desktop / mobile UI**: The layout is designed to work comfortably on both wide desktop screens and tall mobile screens.
 - **Light and dark themes**: Choose System, Light, or Dark appearance. System mode follows your operating system color scheme automatically.
+- **Opt-in preference saving**: By default, the app stores no preferences in the browser. If you enable `Save settings`, the clue count, seed, language, and theme are stored in local storage and restored the next time you open the app. Turning it off removes the saved preferences.
 - **Number of completed boards**: A single template family alone can generate more than about 609.5 billion transformed completed boards. The app uses multiple template families, so the overall variety is even larger.
 - **Board reproducibility**: Enter the same seed value with the same clue count to recreate the same puzzle, including the clue layout.
 - **Notes, hints, and undo history**: Use notes, red notes, hints, solution display, and Undo/Redo while solving.

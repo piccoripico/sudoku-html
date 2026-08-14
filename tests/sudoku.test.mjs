@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { captureSnapshot, createNotesBoard, restoreSnapshot } from '../src/lib/history.js';
-import { isTypingTarget } from '../src/lib/input.js';
+import { isButtonActivationTarget, isTypingTarget } from '../src/lib/input.js';
 import { PUZZLE_TEMPLATES } from '../src/lib/puzzle-templates.js';
 import { countSolutions, createRng, generatePuzzle } from '../src/lib/sudoku.js';
 import { createTimerState, getElapsedMs, startTimer } from '../src/lib/timer.js';
@@ -53,11 +53,19 @@ test('puzzle templates provide multiple unique 17-clue starting points', () => {
   }
 });
 
-test('isTypingTarget ignores interactive elements', () => {
+test('typing targets block game shortcuts while buttons remain available for non-activation keys', () => {
   assert.equal(isTypingTarget({ tagName: 'input' }), true);
   assert.equal(isTypingTarget({ tagName: 'SELECT' }), true);
   assert.equal(isTypingTarget({ tagName: 'div', isContentEditable: true }), true);
+  assert.equal(isTypingTarget({ tagName: 'button' }), false);
   assert.equal(isTypingTarget({ tagName: 'div', isContentEditable: false }), false);
+
+  const button = { tagName: 'button' };
+  assert.equal(isButtonActivationTarget(button, 'Enter'), true);
+  assert.equal(isButtonActivationTarget(button, ' '), true);
+  assert.equal(isButtonActivationTarget(button, 'Spacebar'), true);
+  assert.equal(isButtonActivationTarget(button, '2'), false);
+  assert.equal(isButtonActivationTarget({ tagName: 'input' }, 'Enter'), false);
 });
 
 test('history snapshots preserve meta state and resume timers correctly', () => {

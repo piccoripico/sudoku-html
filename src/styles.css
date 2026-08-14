@@ -30,6 +30,7 @@
   --focus-ring: rgba(20, 184, 166, 0.35);
   --selected-ring: rgba(20, 184, 166, 0.45);
   --active-ring: rgba(20, 184, 166, 0.2);
+  --seed-highlight-bg: #ecfdf5;
   --red-note-border: #dc2626;
   --red-note-ring: rgba(220, 38, 38, 0.18);
   --red-note-text: #b91c1c;
@@ -74,6 +75,7 @@
   --focus-ring: rgba(45, 212, 191, 0.42);
   --selected-ring: rgba(45, 212, 191, 0.58);
   --active-ring: rgba(45, 212, 191, 0.28);
+  --seed-highlight-bg: #15352f;
   --red-note-border: #f87171;
   --red-note-ring: rgba(248, 113, 113, 0.25);
   --red-note-text: #fecaca;
@@ -153,6 +155,46 @@ h1 {
   min-width: 0;
 }
 
+.field-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  min-height: 22px;
+}
+
+.preference-save-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: auto;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.preference-save-toggle.is-enabled {
+  color: var(--accent);
+}
+
+.preference-save-toggle input[type="checkbox"] {
+  appearance: auto;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  accent-color: var(--accent);
+  flex: 0 0 auto;
+}
+
 .utility-actions {
   display: flex;
   align-items: center;
@@ -206,6 +248,17 @@ select {
 .field input,
 .field select {
   width: 100%;
+}
+
+#seedField.seed-specified label {
+  color: var(--accent);
+}
+
+#seedField.seed-specified input {
+  border-color: var(--accent);
+  background: var(--seed-highlight-bg);
+  box-shadow: 0 0 0 2px var(--active-ring);
+  font-weight: 700;
 }
 
 input:focus,

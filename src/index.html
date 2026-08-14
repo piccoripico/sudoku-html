@@ -47,9 +47,9 @@
           </select>
         </div>
 
-        <div class="field">
-          <label id="seedLabel" for="seed">シード</label>
-          <input id="seed" type="number" placeholder="任意" />
+        <div class="field" id="seedField">
+          <label id="seedLabel" for="seed">シード（空白でランダム）</label>
+          <input id="seed" type="number" placeholder="オプション（空白でランダム）" />
         </div>
 
         <div class="field">
@@ -61,7 +61,13 @@
         </div>
 
         <div class="field">
-          <label id="themeLabel" for="theme">表示</label>
+          <div class="field-label-row">
+            <label id="themeLabel" for="theme">表示</label>
+            <label class="preference-save-toggle" id="preferenceSaveToggle" title="ヒント数、シード、言語、表示をこのブラウザに保存">
+              <input id="persistPreferences" type="checkbox" />
+              <span id="preferenceSaveLabel">設定保存</span>
+            </label>
+          </div>
           <select id="theme">
             <option value="system">システム設定</option>
             <option value="light">ライト</option>

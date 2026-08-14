@@ -1,6 +1,5 @@
 import { I18N, translate } from './lib/i18n.js';
-
-const THEME_STORAGE_KEY = 'sudoku_theme';
+import { LANGUAGE_STORAGE_KEY, THEME_STORAGE_KEY, readPreferenceValue, storePreferenceValue } from './lib/preferences.js';
 const THEME_PREFERENCES = new Set(['system', 'light', 'dark']);
 const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 const themeSelectEl = document.getElementById('theme');
@@ -10,24 +9,12 @@ const langSelectEl = document.getElementById('lang');
 let themePreference = readStoredThemePreference();
 
 function readStoredThemePreference() {
-  try {
-    const savedPreference = localStorage.getItem(THEME_STORAGE_KEY);
-    if (THEME_PREFERENCES.has(savedPreference)) {
-      return savedPreference;
-    }
-  } catch {
-    // localStorage can be unavailable in restrictive browser contexts.
-  }
-
-  return 'system';
+  const savedPreference = readPreferenceValue(THEME_STORAGE_KEY);
+  return THEME_PREFERENCES.has(savedPreference) ? savedPreference : 'system';
 }
 
 function storeThemePreference(preference) {
-  try {
-    localStorage.setItem(THEME_STORAGE_KEY, preference);
-  } catch {
-    // Keep the selected theme for the current page even if persistence fails.
-  }
+  storePreferenceValue(THEME_STORAGE_KEY, preference);
 }
 
 function resolveTheme(preference) {
@@ -45,13 +32,9 @@ function applyTheme(preference) {
 }
 
 function getInitialLanguage() {
-  try {
-    const savedLang = localStorage.getItem('sudoku_lang');
-    if (I18N[savedLang]) {
-      return savedLang;
-    }
-  } catch {
-    // Fall back to the browser language when storage is unavailable.
+  const savedLang = readPreferenceValue(LANGUAGE_STORAGE_KEY);
+  if (I18N[savedLang]) {
+    return savedLang;
   }
 
   return (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';

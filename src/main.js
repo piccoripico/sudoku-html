@@ -1,6 +1,7 @@
 import { captureSnapshot, cloneBoard, createNotesBoard, restoreSnapshot } from './lib/history.js';
 import { I18N, translate } from './lib/i18n.js';
-import { isTypingTarget } from './lib/input.js';
+import { isButtonActivationTarget, isTypingTarget } from './lib/input.js';
+import { LANGUAGE_STORAGE_KEY, THEME_STORAGE_KEY, isPreferencePersistenceEnabled, normalizePreferenceStorage, readPreferenceValue, readStoredClueCount, readStoredSeed, setPreferencePersistenceEnabled, storeClueCount, storePreferenceValue, storeSeed } from './lib/preferences.js';
 import { createSaveData, createSaveFilename, parseSaveText } from './lib/persistence.js';
 import { generatePuzzle } from './lib/sudoku.js';
 import { createTimerState, getElapsedMs, pauseTimer, startTimer } from './lib/timer.js';
@@ -20,7 +21,12 @@ const helpContentEl = document.getElementById('helpContent');
 const helpCloseEl = document.getElementById('helpClose');
 const clueCountEl = document.getElementById('clueCount');
 const seedInputEl = document.getElementById('seed');
+const seedFieldEl = document.getElementById('seedField');
 const langSelectEl = document.getElementById('lang');
+const themeSelectEl = document.getElementById('theme');
+const persistPreferencesEl = document.getElementById('persistPreferences');
+const preferenceSaveToggleEl = document.getElementById('preferenceSaveToggle');
+const preferenceSaveLabelEl = document.getElementById('preferenceSaveLabel');
 const saveButtonEl = document.getElementById('saveGame');
 const loadButtonEl = document.getElementById('loadGame');
 const loadFileEl = document.getElementById('loadFile');
@@ -71,6 +77,73 @@ function formatTime(ms) {
   return `${minutes}:${seconds}`;
 }
 
+function hasClueOption(clueCount) {
+  return Array.from(clueCountEl.options).some((option) => (
+    Number(option.value) === clueCount
+  ));
+}
+
+function updateSeedFieldAppearance() {
+  seedFieldEl.classList.toggle('seed-specified', seedInputEl.value.trim() !== '');
+}
+
+function updatePreferencePersistenceControl() {
+  const enabled = isPreferencePersistenceEnabled();
+  persistPreferencesEl.checked = enabled;
+  preferenceSaveToggleEl.classList.toggle('is-enabled', enabled);
+  preferenceSaveLabelEl.textContent = t('preferenceSaveLabel');
+  preferenceSaveToggleEl.title = t('preferenceSaveTitle');
+  persistPreferencesEl.setAttribute('aria-label', t('preferenceSaveTitle'));
+}
+
+function storeCurrentPreferences() {
+  return [
+    storeClueCount(clueCountEl.value),
+    storeSeed(seedInputEl.value),
+    storePreferenceValue(LANGUAGE_STORAGE_KEY, state.currentLang),
+    storePreferenceValue(THEME_STORAGE_KEY, themeSelectEl.value)
+  ].every(Boolean);
+}
+
+function initPreferencePersistence() {
+  normalizePreferenceStorage();
+  updatePreferencePersistenceControl();
+
+  persistPreferencesEl.addEventListener('change', () => {
+    if (persistPreferencesEl.checked) {
+      const enabled = setPreferencePersistenceEnabled(true);
+      const saved = enabled && storeCurrentPreferences();
+
+      if (!saved) {
+        setPreferencePersistenceEnabled(false);
+      }
+    } else {
+      setPreferencePersistenceEnabled(false);
+    }
+
+    updatePreferencePersistenceControl();
+  });
+}
+
+function initPuzzlePreferences() {
+  const savedClueCount = readStoredClueCount();
+  if (savedClueCount !== null && hasClueOption(savedClueCount)) {
+    clueCountEl.value = String(savedClueCount);
+  }
+
+  seedInputEl.value = readStoredSeed();
+  updateSeedFieldAppearance();
+
+  clueCountEl.addEventListener('change', () => {
+    storeClueCount(clueCountEl.value);
+  });
+
+  seedInputEl.addEventListener('input', () => {
+    storeSeed(seedInputEl.value);
+    updateSeedFieldAppearance();
+  });
+}
+
 function rebuildDerivedStateFromBoards() {
   state.givens = new Set();
   state.solutionDigitMap = new Map();
@@ -94,15 +167,12 @@ function rebuildDerivedStateFromBoards() {
 }
 
 function syncPuzzleInputs() {
-  const hasClueOption = Array.from(clueCountEl.options).some((option) => (
-    Number(option.value) === state.selectedClueCount
-  ));
-
-  if (hasClueOption) {
+  if (hasClueOption(state.selectedClueCount)) {
     clueCountEl.value = String(state.selectedClueCount);
   }
 
   seedInputEl.value = state.selectedSeedWasRandom ? '' : String(state.selectedSeedRaw ?? '');
+  updateSeedFieldAppearance();
 }
 
 function syncTimerInterval() {
@@ -317,6 +387,7 @@ function applyLanguage(lang) {
   document.getElementById('seedLabel').textContent = t('seedLabel');
   document.getElementById('langLabel').textContent = t('langLabel');
   seedInputEl.placeholder = t('seedPlaceholder');
+  updatePreferencePersistenceControl();
   document.getElementById('newGame').textContent = t('newGame');
   document.getElementById('reset').textContent = t('reset');
   document.getElementById('hint').textContent = t('hint');
@@ -338,7 +409,7 @@ function applyLanguage(lang) {
 }
 
 function initLanguage() {
-  const savedLang = localStorage.getItem('sudoku_lang');
+  const savedLang = readPreferenceValue(LANGUAGE_STORAGE_KEY);
   const browserLang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
   const preferred = savedLang && I18N[savedLang] ? savedLang : browserLang;
 
@@ -346,7 +417,7 @@ function initLanguage() {
 
   langSelectEl.addEventListener('change', (event) => {
     applyLanguage(event.target.value);
-    localStorage.setItem('sudoku_lang', state.currentLang);
+    storePreferenceValue(LANGUAGE_STORAGE_KEY, state.currentLang);
   });
 }
 
@@ -678,6 +749,9 @@ function resetBoard(pushHistory = true, restartTimer = false) {
 function loadNewPuzzle() {
   const clues = Number(clueCountEl.value);
   const seedValueRaw = seedInputEl.value.trim();
+  storeClueCount(clues);
+  storeSeed(seedValueRaw);
+
   const seedWasRandom = seedValueRaw === '';
   const seedValue = seedWasRandom
     ? Math.floor(Math.random() * 1_000_000_000).toString()
@@ -698,6 +772,7 @@ function loadNewPuzzle() {
   state.hintCount = 0;
   state.solutionRevealed = false;
   state.selectedClueCount = actualClueCount;
+  storeClueCount(state.selectedClueCount);
   state.selectedSeedRaw = seedValue;
   state.selectedSeedWasRandom = seedWasRandom;
   rebuildDerivedStateFromBoards();
@@ -842,7 +917,7 @@ function handleKey(event) {
     return;
   }
 
-  if (isTypingTarget(event.target)) {
+  if (isTypingTarget(event.target) || isButtonActivationTarget(event.target, event.key)) {
     return;
   }
 
@@ -875,15 +950,17 @@ function handleKey(event) {
     return;
   }
 
-  if (event.ctrlKey && event.key.toLowerCase() === 'z') {
+  const shortcutKey = event.key.toLowerCase();
+
+  if (event.ctrlKey && (shortcutKey === 'y' || (event.shiftKey && shortcutKey === 'z'))) {
     event.preventDefault();
-    undoAction();
+    redoAction();
     return;
   }
 
-  if (event.ctrlKey && (event.key.toLowerCase() === 'y' || (event.shiftKey && event.key.toLowerCase() === 'z'))) {
+  if (event.ctrlKey && !event.shiftKey && shortcutKey === 'z') {
     event.preventDefault();
-    redoAction();
+    undoAction();
     return;
   }
 
@@ -928,7 +1005,9 @@ document.addEventListener('keydown', handleKey);
 
 buildBoard();
 buildPad();
+initPreferencePersistence();
 initLanguage();
+initPuzzlePreferences();
 setStatus(t('statusLoading'));
 updateTimerDisplay();
 loadNewPuzzle();

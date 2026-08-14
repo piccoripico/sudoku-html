@@ -18,6 +18,7 @@
 - `Seed`: Enter the same seed to recreate the same puzzle. Leave it empty for a random puzzle.
 - `Language`: Switches the interface language.
 - `Theme`: Choose `System`, `Light`, or `Dark`. `System` follows your operating system color scheme automatically.
+- `Save settings`: When enabled, saves the clue count, seed, language, and theme in this browser. It is off by default.
 - `New Puzzle`: Generates a new puzzle with the current clue count and seed.
 - `Reset to Start`: Returns the board to its initial state. The timer also starts over.
 - `Fill a Hint`: Reveals one correct value in an empty cell.
@@ -25,6 +26,13 @@
 - `Save`: Saves the current board, notes, timer, and Undo/Redo history as a JSON file.
 - `Load`: Loads a saved JSON file and resumes from the same state.
 - `How to Play`: Opens the help dialog. It is available offline.
+
+## Preferences Saved in the Browser
+
+- `Save settings` is off by default, so no preferences are stored in the browser initially.
+- When you enable `Save settings`, the enabled state itself plus `Clues`, `Seed`, `Language`, and `Theme` are stored in local storage and restored the next time you open the app.
+- Turning `Save settings` off removes all of these saved preferences. If the seed field is blank, no seed value is stored even while preference saving is enabled.
+- These preferences are separate from the game-state JSON created by `Save`. The current board, notes, timer, and Undo/Redo history are not autosaved.
 
 ## Controls (Mouse / Tap)
 

@@ -1,10 +1,12 @@
 (() => {
-  const storageKey = 'sudoku_theme';
+  const enabledStorageKey = 'sudoku_preferences_enabled';
+  const themeStorageKey = 'sudoku_theme';
   const validPreferences = new Set(['system', 'light', 'dark']);
   let preference = 'system';
 
   try {
-    const savedPreference = localStorage.getItem(storageKey);
+    const persistenceEnabled = localStorage.getItem(enabledStorageKey) === 'true';
+    const savedPreference = persistenceEnabled ? localStorage.getItem(themeStorageKey) : null;
     if (validPreferences.has(savedPreference)) {
       preference = savedPreference;
     }

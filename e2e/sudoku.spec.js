@@ -88,6 +88,111 @@ test('the same seed and clue count reproduce the same puzzle', async ({ page }) 
   expect(secondBoard).toEqual(firstBoard);
 });
 
+test('Ctrl+Shift+Z redoes an undone entry', async ({ page }) => {
+  await openEnglishPage(page);
+  await generatePuzzle(page, { clueCount: 24, seed: 314159 });
+
+  const target = await getFirstEmptyCell(page);
+  const cell = page.locator(`#board .cell[data-row="${target.row}"][data-col="${target.col}"]`);
+  await cell.click();
+
+  await page.keyboard.press('1');
+  await expect(cell).toHaveText('1');
+
+  await page.keyboard.press('Control+Z');
+  await expect(cell).toHaveText('');
+
+  await page.keyboard.press('Control+Shift+Z');
+  await expect(cell).toHaveText('1');
+});
+
+test('game keyboard shortcuts keep working after a pad button receives focus', async ({ page }) => {
+  await openEnglishPage(page);
+  await generatePuzzle(page, { clueCount: 24, seed: 271828 });
+
+  const target = await getFirstEmptyCell(page);
+  const cell = page.locator(`#board .cell[data-row="${target.row}"][data-col="${target.col}"]`);
+  await cell.click();
+
+  const oneButton = page.locator('#pad button.num').filter({ hasText: /^1$/ });
+  await oneButton.click();
+  await expect(cell).toHaveText('1');
+  await expect(oneButton).toBeFocused();
+
+  await page.keyboard.press('2');
+  await expect(cell).toHaveText('2');
+
+  await page.keyboard.press('Enter');
+  await expect(cell).toHaveText('1');
+  await expect(page.locator('#pad .pad-action:not(.red-note)')).not.toHaveClass(/active/);
+});
+
+test('preference saving is opt-in and persists all four settings only when enabled', async ({ page }) => {
+  await openEnglishPage(page);
+
+  const persistenceToggle = page.locator('#persistPreferences');
+  const seedField = page.locator('#seedField');
+  const seedInput = page.locator('#seed');
+
+  await expect(page.locator('#seedLabel')).toHaveText('Seed (blank for random)');
+  await expect(seedInput).toHaveAttribute('placeholder', 'Optional (blank for random)');
+  await expect(page.locator('#preferenceSaveLabel')).toHaveText('Save settings');
+  await expect(persistenceToggle).not.toBeChecked();
+
+  await page.selectOption('#clueCount', '28');
+  await seedInput.fill('424242');
+  await page.selectOption('#theme', 'dark');
+  await expect(seedField).toHaveClass(/seed-specified/);
+  expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
+
+  await page.reload();
+  await expect(persistenceToggle).not.toBeChecked();
+  await expect(page.locator('#clueCount')).toHaveValue('32');
+  await expect(seedInput).toHaveValue('');
+  await expect(page.locator('#theme')).toHaveValue('system');
+  await expect(seedField).not.toHaveClass(/seed-specified/);
+
+  await page.selectOption('#lang', 'en');
+  await page.selectOption('#clueCount', '28');
+  await seedInput.fill('424242');
+  await page.selectOption('#theme', 'dark');
+  await persistenceToggle.check();
+  await expect(persistenceToggle).toBeChecked();
+
+  const savedPreferences = await page.evaluate(() => ({
+    enabled: localStorage.getItem('sudoku_preferences_enabled'),
+    clues: localStorage.getItem('sudoku_clue_count'),
+    seed: localStorage.getItem('sudoku_seed'),
+    language: localStorage.getItem('sudoku_lang'),
+    theme: localStorage.getItem('sudoku_theme')
+  }));
+  expect(savedPreferences).toEqual({
+    enabled: 'true',
+    clues: '28',
+    seed: '424242',
+    language: 'en',
+    theme: 'dark'
+  });
+
+  await page.reload();
+  await expect(persistenceToggle).toBeChecked();
+  await expect(page.locator('#clueCount')).toHaveValue('28');
+  await expect(seedInput).toHaveValue('424242');
+  await expect(page.locator('#lang')).toHaveValue('en');
+  await expect(page.locator('#theme')).toHaveValue('dark');
+  await expect(seedField).toHaveClass(/seed-specified/);
+
+  await persistenceToggle.uncheck();
+  await expect(persistenceToggle).not.toBeChecked();
+  expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
+
+  await page.reload();
+  await expect(persistenceToggle).not.toBeChecked();
+  await expect(page.locator('#clueCount')).toHaveValue('32');
+  await expect(seedInput).toHaveValue('');
+  await expect(page.locator('#theme')).toHaveValue('system');
+});
+
 test('clear removes values and notes even while note mode is active', async ({ page }) => {
   await openEnglishPage(page);
   await generatePuzzle(page, { clueCount: 24, seed: 246810 });
