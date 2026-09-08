@@ -4,6 +4,12 @@ export const SEED_STORAGE_KEY = 'sudoku_seed';
 export const LANGUAGE_STORAGE_KEY = 'sudoku_lang';
 export const THEME_STORAGE_KEY = 'sudoku_theme';
 
+export interface StorageLike {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+}
+
 const PREFERENCE_STORAGE_KEYS = [
   PREFERENCES_ENABLED_STORAGE_KEY,
   CLUE_COUNT_STORAGE_KEY,
@@ -12,7 +18,7 @@ const PREFERENCE_STORAGE_KEYS = [
   THEME_STORAGE_KEY
 ];
 
-function resolveStorage(storage) {
+function resolveStorage(storage?: StorageLike | null): StorageLike | null {
   if (storage) {
     return storage;
   }
@@ -24,7 +30,7 @@ function resolveStorage(storage) {
   }
 }
 
-function readRawStorageValue(key, storage) {
+function readRawStorageValue(key: string, storage?: StorageLike | null): string | null {
   const target = resolveStorage(storage);
   if (!target) {
     return null;
@@ -37,7 +43,11 @@ function readRawStorageValue(key, storage) {
   }
 }
 
-function storeRawStorageValue(key, value, storage) {
+function storeRawStorageValue(
+  key: string,
+  value: unknown,
+  storage?: StorageLike | null
+): boolean {
   const target = resolveStorage(storage);
   if (!target) {
     return false;
@@ -51,7 +61,7 @@ function storeRawStorageValue(key, value, storage) {
   }
 }
 
-function removeRawStorageValue(key, storage) {
+function removeRawStorageValue(key: string, storage?: StorageLike | null): boolean {
   const target = resolveStorage(storage);
   if (!target) {
     return false;
@@ -65,11 +75,11 @@ function removeRawStorageValue(key, storage) {
   }
 }
 
-export function isPreferencePersistenceEnabled(storage) {
+export function isPreferencePersistenceEnabled(storage?: StorageLike | null): boolean {
   return readRawStorageValue(PREFERENCES_ENABLED_STORAGE_KEY, storage) === 'true';
 }
 
-export function clearPreferenceStorage(storage) {
+export function clearPreferenceStorage(storage?: StorageLike | null): boolean {
   let succeeded = true;
 
   for (const key of PREFERENCE_STORAGE_KEYS) {
@@ -79,7 +89,7 @@ export function clearPreferenceStorage(storage) {
   return succeeded;
 }
 
-export function normalizePreferenceStorage(storage) {
+export function normalizePreferenceStorage(storage?: StorageLike | null): boolean {
   if (isPreferencePersistenceEnabled(storage)) {
     return true;
   }
@@ -88,7 +98,10 @@ export function normalizePreferenceStorage(storage) {
   return false;
 }
 
-export function setPreferencePersistenceEnabled(enabled, storage) {
+export function setPreferencePersistenceEnabled(
+  enabled: boolean,
+  storage?: StorageLike | null
+): boolean {
   if (enabled) {
     return storeRawStorageValue(PREFERENCES_ENABLED_STORAGE_KEY, 'true', storage);
   }
@@ -96,7 +109,7 @@ export function setPreferencePersistenceEnabled(enabled, storage) {
   return clearPreferenceStorage(storage);
 }
 
-export function readPreferenceValue(key, storage) {
+export function readPreferenceValue(key: string, storage?: StorageLike | null): string | null {
   if (!isPreferencePersistenceEnabled(storage)) {
     return null;
   }
@@ -104,7 +117,11 @@ export function readPreferenceValue(key, storage) {
   return readRawStorageValue(key, storage);
 }
 
-export function storePreferenceValue(key, value, storage) {
+export function storePreferenceValue(
+  key: string,
+  value: unknown,
+  storage?: StorageLike | null
+): boolean {
   if (!isPreferencePersistenceEnabled(storage)) {
     return false;
   }
@@ -112,7 +129,7 @@ export function storePreferenceValue(key, value, storage) {
   return storeRawStorageValue(key, value, storage);
 }
 
-export function removePreferenceValue(key, storage) {
+export function removePreferenceValue(key: string, storage?: StorageLike | null): boolean {
   if (!isPreferencePersistenceEnabled(storage)) {
     return false;
   }
@@ -120,7 +137,7 @@ export function removePreferenceValue(key, storage) {
   return removeRawStorageValue(key, storage);
 }
 
-export function readStoredClueCount(storage) {
+export function readStoredClueCount(storage?: StorageLike | null): number | null {
   const rawValue = readPreferenceValue(CLUE_COUNT_STORAGE_KEY, storage);
   if (rawValue == null || rawValue.trim() === '') {
     return null;
@@ -130,7 +147,7 @@ export function readStoredClueCount(storage) {
   return Number.isInteger(clueCount) ? clueCount : null;
 }
 
-export function storeClueCount(value, storage) {
+export function storeClueCount(value: unknown, storage?: StorageLike | null): boolean {
   const clueCount = Number(value);
   if (!Number.isInteger(clueCount)) {
     return false;
@@ -139,11 +156,11 @@ export function storeClueCount(value, storage) {
   return storePreferenceValue(CLUE_COUNT_STORAGE_KEY, clueCount, storage);
 }
 
-export function readStoredSeed(storage) {
+export function readStoredSeed(storage?: StorageLike | null): string {
   return readPreferenceValue(SEED_STORAGE_KEY, storage) ?? '';
 }
 
-export function storeSeed(value, storage) {
+export function storeSeed(value: unknown, storage?: StorageLike | null): boolean {
   const seed = String(value ?? '').trim();
 
   if (seed === '') {

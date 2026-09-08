@@ -237,10 +237,28 @@ export const I18N = {
       44: '44 (very easy)'
     }
   }
-};
+} as const;
 
-export function translate(lang, key, vars = {}) {
-  const dict = I18N[lang] || I18N.ja;
+export type Language = keyof typeof I18N;
+
+type JapaneseDictionary = typeof I18N.ja;
+
+export type TranslationKey = {
+  [Key in keyof JapaneseDictionary]: JapaneseDictionary[Key] extends string ? Key : never;
+}[keyof JapaneseDictionary];
+
+export type TranslationVariables = Readonly<Record<string, string | number>>;
+
+export function isLanguage(value: string): value is Language {
+  return value === 'ja' || value === 'en';
+}
+
+export function translate(
+  lang: string,
+  key: TranslationKey,
+  vars: TranslationVariables = {}
+): string {
+  const dict = isLanguage(lang) ? I18N[lang] : I18N.ja;
   const template = dict[key] ?? I18N.ja[key] ?? '';
-  return String(template).replace(/\{(\w+)\}/g, (_, name) => vars[name] ?? '');
+  return String(template).replace(/\{(\w+)\}/g, (_, name: string) => String(vars[name] ?? ''));
 }

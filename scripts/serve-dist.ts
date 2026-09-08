@@ -1,14 +1,12 @@
-import http from 'node:http';
 import fs from 'node:fs/promises';
+import http from 'node:http';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const distFile = path.resolve(__dirname, '../dist/Sudoku.html');
+const rootDir = process.cwd();
+const distFile = path.join(rootDir, 'dist', 'Sudoku.html');
 const port = Number(process.env.PORT || 4173);
 
-async function readDistFile() {
+async function readDistFile(): Promise<Buffer> {
   return fs.readFile(distFile);
 }
 
@@ -26,9 +24,10 @@ const server = http.createServer(async (request, response) => {
     const body = await readDistFile();
     response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     response.end(body);
-  } catch (error) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
     response.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
-    response.end(`Failed to read dist/Sudoku.html: ${error.message}`);
+    response.end(`Failed to read dist/Sudoku.html: ${message}`);
   }
 });
 
@@ -36,7 +35,7 @@ server.listen(port, '127.0.0.1', () => {
   console.log(`Serving dist/Sudoku.html at http://127.0.0.1:${port}`);
 });
 
-for (const signal of ['SIGINT', 'SIGTERM']) {
+for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, () => {
     server.close(() => process.exit(0));
   });

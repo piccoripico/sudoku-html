@@ -1,3 +1,8 @@
+export interface PuzzleTemplate {
+  puzzle: string;
+  solution: string;
+}
+
 // Diverse 17-clue templates keep generation fast while reducing structural bias.
 export const PUZZLE_TEMPLATES = [
   {
@@ -128,4 +133,4 @@ export const PUZZLE_TEMPLATES = [
     puzzle: '000000001000000230000045000000000060001003000070000400000470500006010000308000000',
     solution: '984237651567981234132645798825194367491763825673852419219476583756318942348529176'
   }
-];
+] satisfies PuzzleTemplate[];

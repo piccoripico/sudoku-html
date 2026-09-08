@@ -40,13 +40,18 @@
 
 ## 開発
 
-1. `npm ci` を実行します。
-2. `npm test` を実行します。
-3. `npm run build` を実行します。
-4. ブラウザテストを初めて使うときは、`npm run test:e2e:install` を実行します。
-5. ブラウザのスモークテストは `npm run test:e2e`、一連の確認は `npm run verify` で実行できます。
+自作の実行コードは TypeScript で記述します。TypeScript は `.build` 配下の一時 JavaScript へコンパイルされ、配布するブラウザ成果物は従来どおり JavaScript / HTML / CSS であり、実行時に TypeScript は必要ありません。v1.8.0 の開発ツールチェーンは TypeScript 7.0.2 と Playwright 1.59.1 を固定し、CI は Node.js 22 を使用します。
 
-`npm run build` は `dist/Sudoku.html` と、展開済みの拡張機能パッケージ `dist/extension` を生成します。
+1. `npm ci` を実行します。
+2. `npm run typecheck` を実行します。
+3. `npm test` を実行します。
+4. `npm run build` を実行します。
+5. ブラウザテストを初めて使うときは、`npm run test:e2e:install` を実行します。
+6. ブラウザ／runtime のスモークテストは `npm run test:e2e`、一連の完全な確認は `npm run verify` で実行できます。
+
+`npm run build` は自己完結した `dist/Sudoku.html` と、展開済みの Manifest V3 拡張機能パッケージ `dist/extension` を生成します。`npm run verify` は TypeScript 型検査、unit test、成果物契約検査、ブラウザ／runtime test をまとめて実行します。
+
+ブラウザ本体の TypeScript 設定はルートの `tsconfig.json` を正本とし、拡張機能・ツール・unit test・Playwright 用の設定は `config/tsconfig/` にまとめています。
 
 ## 自動化
 

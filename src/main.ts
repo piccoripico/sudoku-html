@@ -1,86 +1,115 @@
-import { captureSnapshot, cloneBoard, createNotesBoard, restoreSnapshot } from './lib/history.js';
-import { I18N, translate } from './lib/i18n.js';
+import {
+  captureSnapshot,
+  cloneBoard,
+  createNotesBoard,
+  restoreSnapshot,
+  type HistorySnapshot
+} from './lib/history.js';
+import {
+  I18N,
+  isLanguage,
+  translate,
+  type TranslationKey,
+  type TranslationVariables
+} from './lib/i18n.js';
+import { calculateCompletedNumbers, calculateConflicts, cellKey, isSolved } from './lib/board-analysis.js';
+import { applyGeneratedPuzzleState, applyRestoredGameState, createInitialGameState } from './lib/game-state.js';
+import { requireUiElements } from './lib/ui-elements.js';
+import { requireIndex } from './lib/indexed-access.js';
 import { isButtonActivationTarget, isTypingTarget } from './lib/input.js';
 import { LANGUAGE_STORAGE_KEY, THEME_STORAGE_KEY, isPreferencePersistenceEnabled, normalizePreferenceStorage, readPreferenceValue, readStoredClueCount, readStoredSeed, setPreferencePersistenceEnabled, storeClueCount, storePreferenceValue, storeSeed } from './lib/preferences.js';
-import { createSaveData, createSaveFilename, parseSaveText } from './lib/persistence.js';
-import { generatePuzzle } from './lib/sudoku.js';
-import { createTimerState, getElapsedMs, pauseTimer, startTimer } from './lib/timer.js';
+import {
+  createSaveData,
+  createSaveFilename,
+  parseSaveText,
+  type RestoredSaveFileV1
+} from './lib/persistence.js';
+import { DIGITS, generatePuzzle, type CellValue, type Digit } from './lib/sudoku.js';
+import { getElapsedMs, pauseTimer, startTimer } from './lib/timer.js';
 
-const boardEl = document.getElementById('board');
-const padEl = document.getElementById('pad');
-const statusEl = document.getElementById('status');
-const statsEl = document.getElementById('stats');
-const timerEl = document.getElementById('timer');
-const undoEl = document.getElementById('undo');
-const redoEl = document.getElementById('redo');
-const helpButtonEl = document.getElementById('help');
-const helpOverlayEl = document.getElementById('helpOverlay');
-const helpTitleEl = document.getElementById('helpTitle');
-const helpDialogEl = document.getElementById('helpDialog');
-const helpContentEl = document.getElementById('helpContent');
-const helpCloseEl = document.getElementById('helpClose');
-const clueCountEl = document.getElementById('clueCount');
-const seedInputEl = document.getElementById('seed');
-const seedFieldEl = document.getElementById('seedField');
-const langSelectEl = document.getElementById('lang');
-const themeSelectEl = document.getElementById('theme');
-const persistPreferencesEl = document.getElementById('persistPreferences');
-const preferenceSaveToggleEl = document.getElementById('preferenceSaveToggle');
-const preferenceSaveLabelEl = document.getElementById('preferenceSaveLabel');
-const saveButtonEl = document.getElementById('saveGame');
-const loadButtonEl = document.getElementById('loadGame');
-const loadFileEl = document.getElementById('loadFile');
+interface ApplyValueOptions {
+  highlightNote?: boolean;
+}
 
-const state = {
-  puzzle: [],
-  solution: [],
-  current: [],
-  notes: createNotesBoard(),
-  givens: new Set(),
-  selectedCell: null,
-  noteMode: false,
-  highlightNoteMode: false,
-  history: [],
-  future: [],
-  solutionDigitMap: new Map(),
-  timer: createTimerState(),
-  hintCount: 0,
-  solutionRevealed: false,
-  selectedClueCount: 32,
-  selectedSeedRaw: '',
-  selectedSeedWasRandom: true,
-  currentLang: 'ja'
-};
 
-let noteToggleEl = null;
-let highlightNoteToggleEl = null;
-let clearPadButtonEl = null;
-let timerInterval = null;
-let statusResetTimeout = null;
+const {
+  boardEl,
+  padEl,
+  statusEl,
+  statsEl,
+  timerEl,
+  undoEl,
+  redoEl,
+  helpButtonEl,
+  helpOverlayEl,
+  helpTitleEl,
+  helpContentEl,
+  helpCloseEl,
+  clueCountEl,
+  seedInputEl,
+  seedFieldEl,
+  langSelectEl,
+  themeSelectEl,
+  persistPreferencesEl,
+  preferenceSaveToggleEl,
+  preferenceSaveLabelEl,
+  saveButtonEl,
+  loadButtonEl,
+  loadFileEl,
+  titleEl,
+  clueCountLabelEl,
+  seedLabelEl,
+  langLabelEl,
+  newGameEl,
+  resetEl,
+  hintEl,
+  solveEl,
+  padTitleEl,
+  hintTextEl
+} = requireUiElements();
 
-function t(key, vars = {}) {
+const state = createInitialGameState();
+
+let noteToggleEl: HTMLButtonElement | null = null;
+let highlightNoteToggleEl: HTMLButtonElement | null = null;
+let clearPadButtonEl: HTMLButtonElement | null = null;
+let timerInterval: ReturnType<typeof setInterval> | null = null;
+let statusResetTimeout: ReturnType<typeof setTimeout> | null = null;
+
+function t(key: TranslationKey, vars: TranslationVariables = {}): string {
   return translate(state.currentLang, key, vars);
 }
 
-function cellKey(row, col) {
-  return `${row}-${col}`;
-}
-
-function formatSeedDisplay(seedValue, isRandom) {
+function formatSeedDisplay(seedValue: string, isRandom: boolean): string {
   return isRandom ? t('randomSeed', { seed: seedValue }) : seedValue;
 }
 
-function formatTime(ms) {
+function formatTime(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
   const seconds = (totalSeconds % 60).toString().padStart(2, '0');
   return `${minutes}:${seconds}`;
 }
 
-function hasClueOption(clueCount) {
+function hasClueOption(clueCount: number): boolean {
   return Array.from(clueCountEl.options).some((option) => (
     Number(option.value) === clueCount
   ));
+}
+
+function parseDigit(value: string): Digit | null {
+  switch (value) {
+    case '1': return 1;
+    case '2': return 2;
+    case '3': return 3;
+    case '4': return 4;
+    case '5': return 5;
+    case '6': return 6;
+    case '7': return 7;
+    case '8': return 8;
+    case '9': return 9;
+    default: return null;
+  }
 }
 
 function updateSeedFieldAppearance() {
@@ -144,27 +173,6 @@ function initPuzzlePreferences() {
   });
 }
 
-function rebuildDerivedStateFromBoards() {
-  state.givens = new Set();
-  state.solutionDigitMap = new Map();
-
-  for (let value = 1; value <= 9; value += 1) {
-    state.solutionDigitMap.set(value, []);
-  }
-
-  for (let row = 0; row < 9; row += 1) {
-    for (let col = 0; col < 9; col += 1) {
-      if (state.puzzle[row][col]) {
-        state.givens.add(cellKey(row, col));
-      }
-
-      const solutionValue = state.solution[row][col];
-      if (solutionValue) {
-        state.solutionDigitMap.get(solutionValue).push([row, col]);
-      }
-    }
-  }
-}
 
 function syncPuzzleInputs() {
   if (hasClueOption(state.selectedClueCount)) {
@@ -231,7 +239,7 @@ function syncPadModeButtons() {
   }
 }
 
-function toggleNoteMode(force) {
+function toggleNoteMode(force?: boolean): void {
   state.noteMode = typeof force === 'boolean' ? force : !state.noteMode;
   if (!state.noteMode) {
     state.highlightNoteMode = false;
@@ -239,7 +247,7 @@ function toggleNoteMode(force) {
   syncPadModeButtons();
 }
 
-function toggleHighlightNoteMode(force) {
+function toggleHighlightNoteMode(force?: boolean): void {
   if (!state.noteMode) {
     state.noteMode = true;
   }
@@ -256,7 +264,7 @@ function recordStateForUndo() {
   state.future = [];
 }
 
-function restoreState(snapshot) {
+function restoreState(snapshot: HistorySnapshot): void {
   restoreSnapshot(state, snapshot);
   syncPadModeButtons();
   syncTimerInterval();
@@ -267,11 +275,21 @@ function restoreState(snapshot) {
 }
 
 function updateClueOptionLabels() {
-  const localized = I18N[state.currentLang].clueOptionLabels || {};
+  const localized = I18N[state.currentLang].clueOptionLabels;
 
   for (const option of clueCountEl.options) {
     const value = Number(option.value);
-    option.textContent = localized[value] || String(value);
+    let label: string | undefined;
+    switch (value) {
+      case 17: label = localized[17]; break;
+      case 24: label = localized[24]; break;
+      case 28: label = localized[28]; break;
+      case 32: label = localized[32]; break;
+      case 38: label = localized[38]; break;
+      case 44: label = localized[44]; break;
+      default: label = undefined;
+    }
+    option.textContent = label || String(value);
   }
 }
 
@@ -283,7 +301,7 @@ function updateStats() {
   statsEl.textContent = `${hintText} / ${solutionText} / ${clueText} / ${seedText}`;
 }
 
-function setStatus(message, type = '') {
+function setStatus(message: string, type = ''): void {
   statusEl.textContent = message;
   statusEl.className = `status ${type}`.trim();
 }
@@ -295,7 +313,7 @@ function clearStatusFlash() {
   }
 }
 
-function flashStatus(message, type = '', duration = 2200) {
+function flashStatus(message: string, type = '', duration = 2200): void {
   clearStatusFlash();
   setStatus(message, type);
   statusResetTimeout = setTimeout(() => {
@@ -305,8 +323,8 @@ function flashStatus(message, type = '', duration = 2200) {
 }
 
 function renderHelp() {
-  const locale = I18N[state.currentLang] || I18N.ja;
-  const helpSections = locale.helpSections || [];
+  const locale = I18N[state.currentLang];
+  const helpSections = locale.helpSections;
 
   helpButtonEl.textContent = t('helpButton');
   helpTitleEl.textContent = t('helpTitle');
@@ -316,13 +334,13 @@ function renderHelp() {
   for (const section of helpSections) {
     const sectionEl = document.createElement('section');
     sectionEl.className = 'help-section';
-  
-    if (section.title) {
+
+    if ('title' in section && section.title) {
       const heading = document.createElement('h3');
       heading.textContent = section.title;
       sectionEl.appendChild(heading);
     }
-  
+
     const list = document.createElement('ul');
     list.className = 'help-list';
 
@@ -332,12 +350,13 @@ function renderHelp() {
       label.textContent = `${item.label}: `;
       entry.append(label);
 
-      if (item.text) {
-        entry.append(document.createTextNode(item.text));
+      const itemText = 'text' in item ? item.text : undefined;
+      if (itemText) {
+        entry.append(document.createTextNode(itemText));
       }
 
-      if (item.href) {
-        if (item.text) {
+      if ('href' in item && item.href) {
+        if (itemText) {
           entry.append(document.createTextNode(' '));
         }
 
@@ -345,11 +364,11 @@ function renderHelp() {
         link.href = item.href;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
-        link.textContent = item.linkText || item.href;
+        link.textContent = ('linkText' in item && item.linkText) || item.href;
         entry.append(link);
       }
 
-      if (item.note) {
+      if ('note' in item && item.note) {
         entry.append(document.createTextNode(` ${item.note}`));
       }
 
@@ -361,7 +380,7 @@ function renderHelp() {
   }
 }
 
-function setHelpOpen(open) {
+function setHelpOpen(open: boolean): void {
   helpOverlayEl.hidden = !open;
   helpButtonEl.setAttribute('aria-expanded', String(open));
   document.body.classList.toggle('help-open', open);
@@ -373,8 +392,8 @@ function setHelpOpen(open) {
   }
 }
 
-function applyLanguage(lang) {
-  state.currentLang = I18N[lang] ? lang : 'ja';
+function applyLanguage(lang: string): void {
+  state.currentLang = isLanguage(lang) ? lang : 'ja';
   document.documentElement.lang = state.currentLang;
   document.title = t('title');
 
@@ -382,20 +401,20 @@ function applyLanguage(lang) {
     langSelectEl.value = state.currentLang;
   }
 
-  document.getElementById('title').textContent = t('title');
-  document.getElementById('clueCountLabel').textContent = t('clueLabel');
-  document.getElementById('seedLabel').textContent = t('seedLabel');
-  document.getElementById('langLabel').textContent = t('langLabel');
+  titleEl.textContent = t('title');
+  clueCountLabelEl.textContent = t('clueLabel');
+  seedLabelEl.textContent = t('seedLabel');
+  langLabelEl.textContent = t('langLabel');
   seedInputEl.placeholder = t('seedPlaceholder');
   updatePreferencePersistenceControl();
-  document.getElementById('newGame').textContent = t('newGame');
-  document.getElementById('reset').textContent = t('reset');
-  document.getElementById('hint').textContent = t('hint');
-  document.getElementById('solve').textContent = t('solve');
+  newGameEl.textContent = t('newGame');
+  resetEl.textContent = t('reset');
+  hintEl.textContent = t('hint');
+  solveEl.textContent = t('solve');
   saveButtonEl.textContent = t('saveGame');
   loadButtonEl.textContent = t('loadGame');
-  document.getElementById('padTitle').textContent = t('padTitle');
-  document.getElementById('hintText').textContent = t('hintText');
+  padTitleEl.textContent = t('padTitle');
+  hintTextEl.textContent = t('hintText');
   boardEl.setAttribute('aria-label', t('boardAriaLabel'));
   undoEl.textContent = t('undo');
   redoEl.textContent = t('redo');
@@ -411,12 +430,12 @@ function applyLanguage(lang) {
 function initLanguage() {
   const savedLang = readPreferenceValue(LANGUAGE_STORAGE_KEY);
   const browserLang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
-  const preferred = savedLang && I18N[savedLang] ? savedLang : browserLang;
+  const preferred = savedLang && isLanguage(savedLang) ? savedLang : browserLang;
 
   applyLanguage(preferred);
 
-  langSelectEl.addEventListener('change', (event) => {
-    applyLanguage(event.target.value);
+  langSelectEl.addEventListener('change', () => {
+    applyLanguage(langSelectEl.value);
     storePreferenceValue(LANGUAGE_STORAGE_KEY, state.currentLang);
   });
 }
@@ -428,8 +447,8 @@ function buildBoard() {
     for (let col = 0; col < 9; col += 1) {
       const cell = document.createElement('div');
       cell.className = 'cell';
-      cell.dataset.row = row;
-      cell.dataset.col = col;
+      cell.dataset.row = String(row);
+      cell.dataset.col = String(col);
       cell.addEventListener('click', () => selectCell(row, col));
       boardEl.appendChild(cell);
     }
@@ -439,9 +458,9 @@ function buildBoard() {
 function buildPad() {
   padEl.innerHTML = '';
 
-  for (let value = 1; value <= 9; value += 1) {
+  for (const value of DIGITS) {
     const button = document.createElement('button');
-    button.textContent = value;
+    button.textContent = String(value);
     button.className = 'num';
     button.addEventListener('click', () => applyValue(value));
     button.addEventListener('contextmenu', (event) => {
@@ -469,7 +488,7 @@ function buildPad() {
   syncPadModeButtons();
 }
 
-function selectCell(row, col) {
+function selectCell(row: number, col: number): void {
   const previous = getSelectedElement();
   if (previous) {
     previous.classList.remove('selected');
@@ -489,11 +508,13 @@ function ensureSelection() {
   }
 }
 
-function moveSelection(rowDelta, colDelta) {
+function moveSelection(rowDelta: number, colDelta: number): void {
   ensureSelection();
+  const selectedCell = state.selectedCell;
+  if (!selectedCell) return;
 
-  const nextRow = (state.selectedCell.row + rowDelta + 9) % 9;
-  const nextCol = (state.selectedCell.col + colDelta + 9) % 9;
+  const nextRow = (selectedCell.row + rowDelta + 9) % 9;
+  const nextCol = (selectedCell.col + colDelta + 9) % 9;
   selectCell(nextRow, nextCol);
 }
 
@@ -503,18 +524,21 @@ function clearSelectedCell() {
   const { row, col } = state.selectedCell;
   if (state.givens.has(cellKey(row, col))) return;
 
-  const hasValue = state.current[row][col] !== 0;
-  const hasNotes = state.notes[row][col].size > 0;
+  const currentRow = requireIndex(state.current, row, 'current board');
+  const notesRow = requireIndex(state.notes, row, 'notes board');
+  const noteMap = requireIndex(notesRow, col, 'notes board row');
+  const hasValue = requireIndex(currentRow, col, 'current board row') !== 0;
+  const hasNotes = noteMap.size > 0;
   if (!hasValue && !hasNotes) return;
 
   recordStateForUndo();
-  state.current[row][col] = 0;
-  state.notes[row][col].clear();
+  currentRow[col] = 0;
+  noteMap.clear();
   renderBoard();
   updateStatus();
 }
 
-function applyValue(value, options = {}) {
+function applyValue(value: CellValue, options: ApplyValueOptions = {}): void {
   const { highlightNote = false } = options;
   if (!state.selectedCell) return;
 
@@ -525,8 +549,11 @@ function applyValue(value, options = {}) {
     return applyValue(value, { highlightNote: false });
   }
 
+  const currentRow = requireIndex(state.current, row, 'current board');
+  const notesRow = requireIndex(state.notes, row, 'notes board');
+  const noteMap = requireIndex(notesRow, col, 'notes board row');
+
   if (state.noteMode) {
-    const noteMap = state.notes[row][col];
     const useHighlightedNote = highlightNote || state.highlightNoteMode;
 
     if (value === 0) {
@@ -548,118 +575,52 @@ function applyValue(value, options = {}) {
       }
     }
   } else {
-    const currentValue = state.current[row][col];
+    const currentValue = requireIndex(currentRow, col, 'current board row');
     const nextValue = value === currentValue ? 0 : value;
     if (nextValue === currentValue) return;
 
     recordStateForUndo();
-    state.current[row][col] = nextValue;
-    state.notes[row][col].clear();
+    currentRow[col] = nextValue;
+    noteMap.clear();
   }
 
   renderBoard();
   updateStatus();
 }
 
-function calculateConflicts() {
-  const conflicts = new Set();
-
-  for (let index = 0; index < 9; index += 1) {
-    const rowMap = new Map();
-    const colMap = new Map();
-
-    for (let inner = 0; inner < 9; inner += 1) {
-      const rowValue = state.current[index][inner];
-      const colValue = state.current[inner][index];
-
-      if (rowValue) {
-        const positions = rowMap.get(rowValue) || [];
-        positions.push([index, inner]);
-        rowMap.set(rowValue, positions);
-      }
-
-      if (colValue) {
-        const positions = colMap.get(colValue) || [];
-        positions.push([inner, index]);
-        colMap.set(colValue, positions);
-      }
-    }
-
-    for (const positions of [...rowMap.values(), ...colMap.values()]) {
-      if (positions.length > 1) {
-        positions.forEach(([row, col]) => conflicts.add(cellKey(row, col)));
-      }
-    }
-  }
-
-  for (let blockRow = 0; blockRow < 3; blockRow += 1) {
-    for (let blockCol = 0; blockCol < 3; blockCol += 1) {
-      const blockMap = new Map();
-
-      for (let row = blockRow * 3; row < blockRow * 3 + 3; row += 1) {
-        for (let col = blockCol * 3; col < blockCol * 3 + 3; col += 1) {
-          const value = state.current[row][col];
-          if (!value) continue;
-
-          const positions = blockMap.get(value) || [];
-          positions.push([row, col]);
-          blockMap.set(value, positions);
-        }
-      }
-
-      for (const positions of blockMap.values()) {
-        if (positions.length > 1) {
-          positions.forEach(([row, col]) => conflicts.add(cellKey(row, col)));
-        }
-      }
-    }
-  }
-
-  return conflicts;
-}
-
-function calculateCompletedNumbers() {
-  const completed = new Set();
-
-  for (let value = 1; value <= 9; value += 1) {
-    const positions = state.solutionDigitMap.get(value) || [];
-    if (positions.length === 9 && positions.every(([row, col]) => state.current[row][col] === value)) {
-      completed.add(value);
-    }
-  }
-
-  return completed;
-}
-
-function renderCell(row, col, conflicts, completedNumbers) {
-  const value = state.current[row][col];
-  const cell = boardEl.children[row * 9 + col];
+function renderCell(row: number, col: number, conflicts: ReadonlySet<string>, completedNumbers: ReadonlySet<Digit>): void {
+  const currentRow = requireIndex(state.current, row, 'current board');
+  const solutionRow = requireIndex(state.solution, row, 'solution board');
+  const notesRow = requireIndex(state.notes, row, 'notes board');
+  const value = requireIndex(currentRow, col, 'current board row');
+  const solutionValue = requireIndex(solutionRow, col, 'solution board row');
+  const cell = requireIndex(boardEl.children, row * 9 + col, 'board cells');
   const isSelected = state.selectedCell
     && state.selectedCell.row === row
     && state.selectedCell.col === col;
 
   cell.classList.toggle('selected', Boolean(isSelected));
   cell.classList.toggle('given', state.givens.has(cellKey(row, col)));
-  cell.classList.toggle('completed-number', value && completedNumbers.has(value) && value === state.solution[row][col]);
+  cell.classList.toggle('completed-number', Boolean(value && completedNumbers.has(value) && value === solutionValue));
   cell.classList.toggle('conflict', conflicts.has(cellKey(row, col)));
 
   cell.innerHTML = '';
   if (value) {
-    cell.textContent = value;
+    cell.textContent = String(value);
     return;
   }
 
-  const noteMap = state.notes[row][col];
+  const noteMap = requireIndex(notesRow, col, 'notes board row');
   if (!noteMap.size) return;
 
   const notesGrid = document.createElement('div');
   notesGrid.className = 'notes';
 
-  for (let noteValue = 1; noteValue <= 9; noteValue += 1) {
+  for (const noteValue of DIGITS) {
     const span = document.createElement('span');
     const entry = noteMap.get(noteValue);
     if (entry) {
-      span.textContent = noteValue;
+      span.textContent = String(noteValue);
       if (entry.highlighted) {
         span.classList.add('highlighted');
       }
@@ -671,26 +632,14 @@ function renderCell(row, col, conflicts, completedNumbers) {
 }
 
 function renderBoard() {
-  const conflicts = calculateConflicts();
-  const completedNumbers = calculateCompletedNumbers();
+  const conflicts = calculateConflicts(state.current);
+  const completedNumbers = calculateCompletedNumbers(state.current, state.solutionDigitMap);
 
   for (let row = 0; row < 9; row += 1) {
     for (let col = 0; col < 9; col += 1) {
       renderCell(row, col, conflicts, completedNumbers);
     }
   }
-}
-
-function isSolved() {
-  for (let row = 0; row < 9; row += 1) {
-    for (let col = 0; col < 9; col += 1) {
-      if (state.current[row][col] !== state.solution[row][col]) {
-        return false;
-      }
-    }
-  }
-
-  return true;
 }
 
 function updateStatus() {
@@ -703,14 +652,15 @@ function updateStatus() {
 
   let filled = true;
   for (let row = 0; row < 9; row += 1) {
+    const currentRow = requireIndex(state.current, row, 'current board');
     for (let col = 0; col < 9; col += 1) {
-      if (state.current[row][col] === 0) {
+      if (requireIndex(currentRow, col, 'current board row') === 0) {
         filled = false;
       }
     }
   }
 
-  if (filled && isSolved()) {
+  if (filled && isSolved(state.current, state.solution)) {
     freezeTimer();
     if (state.solutionRevealed) {
       setStatus(t('statusSolutionShown'), 'success');
@@ -761,21 +711,14 @@ function loadNewPuzzle() {
 
   const { puzzleBoard, solutionBoard, actualClueCount } = generatePuzzle(clues, seedValue);
 
-  state.puzzle = puzzleBoard;
-  state.solution = solutionBoard;
-  state.current = cloneBoard(state.puzzle);
-  state.notes = createNotesBoard();
-  state.givens = new Set();
-  state.solutionDigitMap = new Map();
-  state.history = [];
-  state.future = [];
-  state.hintCount = 0;
-  state.solutionRevealed = false;
-  state.selectedClueCount = actualClueCount;
+  applyGeneratedPuzzleState(state, {
+    puzzle: puzzleBoard,
+    solution: solutionBoard,
+    actualClueCount,
+    seedValue,
+    seedWasRandom
+  });
   storeClueCount(state.selectedClueCount);
-  state.selectedSeedRaw = seedValue;
-  state.selectedSeedWasRandom = seedWasRandom;
-  rebuildDerivedStateFromBoards();
   syncPuzzleInputs();
 
   toggleNoteMode(false);
@@ -786,36 +729,11 @@ function loadNewPuzzle() {
   updateStatus();
 }
 
-function applyLoadedGame(saveData) {
+function applyLoadedGame(saveData: RestoredSaveFileV1): void {
   const { game } = saveData;
 
-  state.puzzle = game.puzzle;
-  state.solution = game.solution;
-  state.current = game.current;
-  state.notes = game.notes;
-  state.history = game.history;
-  state.future = game.future;
-  state.hintCount = game.hintCount;
-  state.solutionRevealed = game.solutionRevealed;
-  state.noteMode = game.noteMode;
-  state.highlightNoteMode = game.highlightNoteMode;
-  state.selectedCell = game.selectedCell;
-  state.selectedClueCount = game.selectedClueCount;
-  state.selectedSeedRaw = game.selectedSeedRaw;
-  state.selectedSeedWasRandom = game.selectedSeedWasRandom;
-
-  rebuildDerivedStateFromBoards();
+  applyRestoredGameState(state, game);
   syncPuzzleInputs();
-  restoreSnapshot(state, {
-    current: state.current,
-    notes: state.notes,
-    hintCount: state.hintCount,
-    solutionRevealed: state.solutionRevealed,
-    noteMode: state.noteMode,
-    highlightNoteMode: state.highlightNoteMode,
-    selectedCell: state.selectedCell,
-    timer: game.timer
-  });
   syncPadModeButtons();
   syncTimerInterval();
   updateTimerDisplay();
@@ -848,7 +766,7 @@ function saveGameToFile() {
   }
 }
 
-async function loadGameFromFile(file) {
+async function loadGameFromFile(file: File): Promise<void> {
   try {
     const text = await file.text();
     const saveData = parseSaveText(text);
@@ -863,12 +781,15 @@ async function loadGameFromFile(file) {
 
 function revealHint() {
   for (let row = 0; row < 9; row += 1) {
+    const currentRow = requireIndex(state.current, row, 'current board');
+    const solutionRow = requireIndex(state.solution, row, 'solution board');
+    const notesRow = requireIndex(state.notes, row, 'notes board');
     for (let col = 0; col < 9; col += 1) {
-      if (state.current[row][col] !== 0) continue;
+      if (requireIndex(currentRow, col, 'current board row') !== 0) continue;
 
       recordStateForUndo();
-      state.current[row][col] = state.solution[row][col];
-      state.notes[row][col].clear();
+      currentRow[col] = requireIndex(solutionRow, col, 'solution board row');
+      requireIndex(notesRow, col, 'notes board row').clear();
       state.hintCount += 1;
 
       renderBoard();
@@ -897,7 +818,9 @@ function undoAction() {
 
   state.future.push(captureSnapshot(state));
   const previous = state.history.pop();
-  restoreState(previous);
+  if (previous) {
+    restoreState(previous);
+  }
 }
 
 function redoAction() {
@@ -905,10 +828,12 @@ function redoAction() {
 
   state.history.push(captureSnapshot(state));
   const next = state.future.pop();
-  restoreState(next);
+  if (next) {
+    restoreState(next);
+  }
 }
 
-function handleKey(event) {
+function handleKey(event: KeyboardEvent): void {
   if (!helpOverlayEl.hidden) {
     if (event.key === 'Escape') {
       event.preventDefault();
@@ -968,8 +893,10 @@ function handleKey(event) {
 
   const digitMatch = /^(?:Digit|Numpad)([1-9])$/.exec(event.code);
   if (digitMatch) {
-    const value = Number(digitMatch[1]);
-    applyValue(value, { highlightNote: state.noteMode && event.shiftKey });
+    const value = parseDigit(requireIndex(digitMatch, 1, 'digit key match'));
+    if (value !== null) {
+      applyValue(value, { highlightNote: state.noteMode && event.shiftKey });
+    }
     event.preventDefault();
     return;
   }
@@ -980,14 +907,14 @@ function handleKey(event) {
   }
 }
 
-document.getElementById('newGame').addEventListener('click', loadNewPuzzle);
-document.getElementById('reset').addEventListener('click', () => resetBoard(true, true));
-document.getElementById('hint').addEventListener('click', revealHint);
-document.getElementById('solve').addEventListener('click', showSolution);
+newGameEl.addEventListener('click', loadNewPuzzle);
+resetEl.addEventListener('click', () => resetBoard(true, true));
+hintEl.addEventListener('click', revealHint);
+solveEl.addEventListener('click', showSolution);
 saveButtonEl.addEventListener('click', saveGameToFile);
 loadButtonEl.addEventListener('click', () => loadFileEl.click());
-loadFileEl.addEventListener('change', (event) => {
-  const [file] = event.target.files || [];
+loadFileEl.addEventListener('change', () => {
+  const [file] = loadFileEl.files || [];
   if (file) {
     loadGameFromFile(file);
   }

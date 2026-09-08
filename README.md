@@ -40,13 +40,18 @@ Choose the version that fits how you want to play:
 
 ## Development
 
-1. Run `npm ci`.
-2. Run `npm test`.
-3. Run `npm run build`.
-4. The first time you use browser tests, run `npm run test:e2e:install`.
-5. Run `npm run test:e2e` for browser smoke tests, or `npm run verify` for the full local check.
+First-party executable source is written in TypeScript. TypeScript is compiled to temporary JavaScript under `.build`; distributed browser artifacts remain JavaScript/HTML/CSS and do not require TypeScript at runtime. The v1.8.0 development toolchain pins TypeScript 7.0.2 and Playwright 1.59.1; CI uses Node.js 22.
 
-`npm run build` generates `dist/Sudoku.html` and the unpacked extension package at `dist/extension`.
+1. Run `npm ci`.
+2. Run `npm run typecheck`.
+3. Run `npm test`.
+4. Run `npm run build`.
+5. The first time you use browser tests, run `npm run test:e2e:install`.
+6. Run `npm run test:e2e` for browser/runtime smoke tests, or `npm run verify` for the complete local gate.
+
+`npm run build` generates the self-contained `dist/Sudoku.html` and the unpacked Manifest V3 extension package at `dist/extension`. `npm run verify` checks TypeScript, unit tests, built-artifact contracts, and browser/runtime tests.
+
+The primary browser TypeScript project is configured by the root `tsconfig.json`; environment-specific projects (extension, tools, unit tests, and Playwright) are kept under `config/tsconfig/`.
 
 ## Automation
 

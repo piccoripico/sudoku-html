@@ -1,13 +1,18 @@
 (() => {
+  type ThemePreference = 'system' | 'light' | 'dark';
+
   const enabledStorageKey = 'sudoku_preferences_enabled';
   const themeStorageKey = 'sudoku_theme';
-  const validPreferences = new Set(['system', 'light', 'dark']);
-  let preference = 'system';
+  let preference: ThemePreference = 'system';
+
+  function isThemePreference(value: string | null): value is ThemePreference {
+    return value === 'system' || value === 'light' || value === 'dark';
+  }
 
   try {
     const persistenceEnabled = localStorage.getItem(enabledStorageKey) === 'true';
     const savedPreference = persistenceEnabled ? localStorage.getItem(themeStorageKey) : null;
-    if (validPreferences.has(savedPreference)) {
+    if (isThemePreference(savedPreference)) {
       preference = savedPreference;
     }
   } catch {

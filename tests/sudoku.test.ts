@@ -1,11 +1,35 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
+import { requireIndex } from '../src/lib/indexed-access.js';
 import { captureSnapshot, createNotesBoard, restoreSnapshot } from '../src/lib/history.js';
 import { isButtonActivationTarget, isTypingTarget } from '../src/lib/input.js';
 import { PUZZLE_TEMPLATES } from '../src/lib/puzzle-templates.js';
-import { countSolutions, createRng, generatePuzzle } from '../src/lib/sudoku.js';
+import { countSolutions, createRng, generatePuzzle, type Board, type CellValue } from '../src/lib/sudoku.js';
 import { createTimerState, getElapsedMs, startTimer } from '../src/lib/timer.js';
+
+function toCellValue(character: string): CellValue {
+  const value = Number(character);
+  switch (value) {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+    case 9:
+      return value;
+    default:
+      throw new Error(`Invalid test board value: ${character}`);
+  }
+}
+
+function createBoard(value: CellValue): Board {
+  return Array.from({ length: 9 }, () => Array<CellValue>(9).fill(value));
+}
 
 test('createRng is deterministic for composite string seeds', () => {
   const rngA = createRng('123:attempt:0');
@@ -44,7 +68,7 @@ test('puzzle templates provide multiple unique 17-clue starting points', () => {
   for (const template of PUZZLE_TEMPLATES) {
     const clueCount = Array.from(template.puzzle).filter((value) => value !== '0').length;
     const board = Array.from({ length: 9 }, (_, row) => (
-      template.puzzle.slice(row * 9, row * 9 + 9).split('').map(Number)
+      template.puzzle.slice(row * 9, row * 9 + 9).split('').map(toCellValue)
     ));
 
     assert.equal(clueCount, 17);
@@ -70,7 +94,7 @@ test('typing targets block game shortcuts while buttons remain available for non
 
 test('history snapshots preserve meta state and resume timers correctly', () => {
   const originalState = {
-    current: Array.from({ length: 9 }, () => Array(9).fill(0)),
+    current: createBoard(0),
     notes: createNotesBoard(),
     hintCount: 2,
     solutionRevealed: true,
@@ -80,14 +104,14 @@ test('history snapshots preserve meta state and resume timers correctly', () => 
     timer: createTimerState()
   };
 
-  originalState.current[1][2] = 7;
-  originalState.notes[0][0].set(3, { highlighted: true });
+  requireIndex(originalState.current, 1, 'current board')[2] = 7;
+  requireIndex(requireIndex(originalState.notes, 0, 'notes'), 0, 'notes row').set(3, { highlighted: true });
   startTimer(originalState.timer, 1000);
 
   const snapshot = captureSnapshot(originalState, 1600);
 
   const restoredState = {
-    current: Array.from({ length: 9 }, () => Array(9).fill(9)),
+    current: createBoard(9),
     notes: createNotesBoard(),
     hintCount: 0,
     solutionRevealed: false,
@@ -100,7 +124,7 @@ test('history snapshots preserve meta state and resume timers correctly', () => 
   restoreSnapshot(restoredState, snapshot, 5000);
 
   assert.deepEqual(restoredState.current, originalState.current);
-  assert.equal(restoredState.notes[0][0].get(3).highlighted, true);
+  assert.equal(requireIndex(requireIndex(restoredState.notes, 0, 'restored notes'), 0, 'restored notes row').get(3)?.highlighted, true);
   assert.equal(restoredState.hintCount, 2);
   assert.equal(restoredState.solutionRevealed, true);
   assert.equal(restoredState.noteMode, true);

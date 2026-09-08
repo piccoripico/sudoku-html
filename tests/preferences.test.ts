@@ -15,20 +15,21 @@ import {
   setPreferencePersistenceEnabled,
   storeClueCount,
   storePreferenceValue,
-  storeSeed
+  storeSeed,
+  type StorageLike
 } from '../src/lib/preferences.js';
 
-function createStorage(initial = {}) {
-  const values = new Map(Object.entries(initial));
+function createStorage(initial: Record<string, string> = {}): StorageLike {
+  const values = new Map<string, string>(Object.entries(initial));
 
   return {
-    getItem(key) {
-      return values.has(key) ? values.get(key) : null;
+    getItem(key: string): string | null {
+      return values.get(key) ?? null;
     },
-    setItem(key, value) {
+    setItem(key: string, value: string): void {
       values.set(key, String(value));
     },
-    removeItem(key) {
+    removeItem(key: string): void {
       values.delete(key);
     }
   };

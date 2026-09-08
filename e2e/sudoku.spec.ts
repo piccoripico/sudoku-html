@@ -1,31 +1,63 @@
-import { readFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
-import { expect, test } from '@playwright/test';
+import { chromium, expect, test, type Page } from '@playwright/test';
 
-async function openEnglishPage(page) {
+interface PuzzleOptions {
+  clueCount: number;
+  seed: number;
+}
+
+interface CellCoordinates {
+  row: string;
+  col: string;
+}
+
+interface RawCellCoordinates {
+  row: string | null;
+  col: string | null;
+}
+
+function requireCellCoordinates(
+  coordinates: RawCellCoordinates | null,
+  description: string
+): CellCoordinates {
+  if (!coordinates || coordinates.row === null || coordinates.col === null) {
+    throw new Error(`${description} is missing row/column metadata.`);
+  }
+
+  return {
+    row: coordinates.row,
+    col: coordinates.col
+  };
+}
+
+async function openEnglishPage(page: Page): Promise<void> {
   await page.goto('/');
   await page.selectOption('#lang', 'en');
   await expect(page.locator('#help')).toHaveText('How to Play');
 }
 
-async function generatePuzzle(page, { clueCount, seed }) {
+async function generatePuzzle(page: Page, { clueCount, seed }: PuzzleOptions): Promise<void> {
   await page.selectOption('#clueCount', String(clueCount));
   await page.locator('#seed').fill(String(seed));
   await page.locator('#newGame').click();
 }
 
-async function readBoard(page) {
+async function readBoard(page: Page): Promise<string[]> {
   return page.locator('#board .cell').evaluateAll((cells) => (
-    cells.map((cell) => cell.textContent.trim())
+    cells.map((cell) => (cell.textContent ?? '').trim())
   ));
 }
 
-async function getFirstEmptyCell(page) {
-  const emptyCell = await page.locator('#board .cell').evaluateAll((cells) => {
-    const target = cells.find((cell) => cell.textContent.trim() === '');
+async function getFirstEmptyCell(page: Page): Promise<CellCoordinates> {
+  const emptyCell = await page.locator('#board .cell').evaluateAll((cells): RawCellCoordinates | null => {
+    const target = cells.find((cell) => (cell.textContent ?? '').trim() === '');
     return target ? {
-      row: target.dataset.row,
-      col: target.dataset.col
+      row: target.getAttribute('data-row'),
+      col: target.getAttribute('data-col')
     } : null;
   });
 
@@ -33,17 +65,17 @@ async function getFirstEmptyCell(page) {
     throw new Error('No empty cell was found.');
   }
 
-  return emptyCell;
+  return requireCellCoordinates(emptyCell, 'Empty cell');
 }
 
-async function getFirstEmptyCells(page, count) {
-  const cells = await page.locator('#board .cell').evaluateAll((allCells, amount) => (
+async function getFirstEmptyCells(page: Page, count: number): Promise<CellCoordinates[]> {
+  const cells = await page.locator('#board .cell').evaluateAll((allCells, amount): RawCellCoordinates[] => (
     allCells
-      .filter((cell) => cell.textContent.trim() === '')
+      .filter((cell) => (cell.textContent ?? '').trim() === '')
       .slice(0, amount)
       .map((cell) => ({
-        row: cell.dataset.row,
-        col: cell.dataset.col
+        row: cell.getAttribute('data-row'),
+        col: cell.getAttribute('data-col')
       }))
   ), count);
 
@@ -51,13 +83,13 @@ async function getFirstEmptyCells(page, count) {
     throw new Error(`Only found ${cells.length} empty cells.`);
   }
 
-  return cells;
+  return cells.map((cell, index) => requireCellCoordinates(cell, `Empty cell ${index}`));
 }
 
-async function getVisibleNotes(page, row, col) {
+async function getVisibleNotes(page: Page, row: string, col: string): Promise<string> {
   return page.locator(`#board .cell[data-row="${row}"][data-col="${col}"]`).evaluate((cell) => (
     Array.from(cell.querySelectorAll('.notes span'))
-      .map((span) => span.textContent)
+      .map((span) => span.textContent ?? '')
       .join('')
   ));
 }
@@ -231,7 +263,12 @@ test('save and load restore progress, notes, and undo history', async ({ page })
   await openEnglishPage(page);
   await generatePuzzle(page, { clueCount: 24, seed: 13579 });
 
-  const [valueTarget, noteTarget] = await getFirstEmptyCells(page, 2);
+  const targets = await getFirstEmptyCells(page, 2);
+  const valueTarget = targets[0];
+  const noteTarget = targets[1];
+  if (valueTarget === undefined || noteTarget === undefined) {
+    throw new Error('Expected at least two empty cells for save/load coverage.');
+  }
   const noteButton = page.locator('#pad .pad-action:not(.red-note)');
   const valueCell = page.locator(`#board .cell[data-row="${valueTarget.row}"][data-col="${valueTarget.col}"]`);
   const noteCell = page.locator(`#board .cell[data-row="${noteTarget.row}"][data-col="${noteTarget.col}"]`);
@@ -250,11 +287,16 @@ test('save and load restore progress, notes, and undo history', async ({ page })
   await page.getByRole('button', { name: 'Save' }).click();
   const download = await downloadPromise;
   const downloadPath = await download.path();
+  if (downloadPath === null) {
+    throw new Error('Playwright did not provide a download path.');
+  }
   const saveText = await readFile(downloadPath, 'utf8');
-  const savedJson = JSON.parse(saveText);
+  const savedJson: unknown = JSON.parse(saveText);
 
-  expect(savedJson.format).toBe('sudoku-html-save');
-  expect(savedJson.version).toBe(1);
+  expect(savedJson).toMatchObject({
+    format: 'sudoku-html-save',
+    version: 1
+  });
 
   await generatePuzzle(page, { clueCount: 32, seed: 24680 });
 
@@ -272,4 +314,51 @@ test('save and load restore progress, notes, and undo history', async ({ page })
 
   await page.getByRole('button', { name: 'Undo' }).click();
   await expect.poll(() => getVisibleNotes(page, noteTarget.row, noteTarget.col)).toBe('');
+});
+
+
+test('built single-file distribution runs directly from file://', async ({ page }) => {
+  const singleFileUrl = pathToFileURL(path.resolve('dist', 'Sudoku.html')).href;
+  await page.goto(singleFileUrl);
+
+  await expect(page.locator('#board .cell')).toHaveCount(81);
+  await page.selectOption('#lang', 'en');
+  await expect(page.locator('#help')).toHaveText('How to Play');
+
+  await generatePuzzle(page, { clueCount: 24, seed: 424242 });
+  await expect(page.locator('#stats')).toContainText('Seed: 424242');
+  const target = await getFirstEmptyCell(page);
+  const cell = page.locator(`#board .cell[data-row="${target.row}"][data-col="${target.col}"]`);
+  await cell.click();
+  await page.keyboard.press('1');
+  await expect(cell).toHaveText('1');
+});
+
+test('built unpacked extension registers its worker and initializes the Sudoku page', async () => {
+  const extensionPath = path.resolve('dist', 'extension');
+  const userDataDir = await mkdtemp(path.join(tmpdir(), 'sudoku-extension-'));
+  const context = await chromium.launchPersistentContext(userDataDir, {
+    channel: 'chromium',
+    headless: true,
+    args: [
+      `--disable-extensions-except=${extensionPath}`,
+      `--load-extension=${extensionPath}`
+    ]
+  });
+
+  try {
+    let [worker] = context.serviceWorkers();
+    worker ??= await context.waitForEvent('serviceworker');
+    const extensionId = new URL(worker.url()).host;
+    expect(extensionId).not.toBe('');
+
+    const page = await context.newPage();
+    await page.goto(`chrome-extension://${extensionId}/index.html`);
+    await expect(page.locator('#board .cell')).toHaveCount(81);
+    await page.selectOption('#lang', 'en');
+    await expect(page.locator('#help')).toHaveText('How to Play');
+  } finally {
+    await context.close();
+    await rm(userDataDir, { recursive: true, force: true });
+  }
 });
