@@ -1,0 +1,14 @@
+{
+  "extensionName": {
+    "message": "One-Click Sudoku"
+  },
+  "extensionShortName": {
+    "message": "Sudoku"
+  },
+  "extensionDescription": {
+    "message": "도구 모음에서 스도쿠를 열고 오프라인으로 플레이하세요."
+  },
+  "extensionActionTitle": {
+    "message": "스도쿠 열기"
+  }
+}

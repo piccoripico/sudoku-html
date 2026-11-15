@@ -1,0 +1,16 @@
+{
+  "screenshotWidth": 390,
+  "screenshotHeight": 1849,
+  "board": {
+    "x": 29,
+    "y": 764,
+    "width": 332,
+    "height": 332
+  },
+  "controls": {
+    "x": 29,
+    "y": 1112,
+    "width": 332,
+    "height": 499
+  }
+}

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="Sudoku 3x3 grid with a central 9">
+<rect id="background" x="2" y="2" width="1020" height="1020" rx="174" fill="#052940"/>
+<rect class="tile" x="50" y="50" width="292" height="292" rx="58" fill="#FFC318"/>
+<rect class="tile" x="366" y="50" width="292" height="292" rx="58" fill="#F8FCFF"/>
+<rect class="tile" x="682" y="50" width="292" height="292" rx="58" fill="#F8FCFF"/>
+<rect class="tile" x="50" y="366" width="292" height="292" rx="58" fill="#F8FCFF"/>
+<rect class="tile" x="366" y="366" width="292" height="292" rx="58" fill="#31EAC1"/>
+<rect class="tile" x="682" y="366" width="292" height="292" rx="58" fill="#F8FCFF"/>
+<rect class="tile" x="50" y="682" width="292" height="292" rx="58" fill="#F8FCFF"/>
+<rect class="tile" x="366" y="682" width="292" height="292" rx="58" fill="#F8FCFF"/>
+<rect class="tile" x="682" y="682" width="292" height="292" rx="58" fill="#FFC318"/>
+<path id="center-nine" d="M205 33V309Q297 266 381.0 244.5Q465 223 547 223Q719 223 815.0 318.5Q911 414 928 602Q860 552 783.0 527.0Q706 502 616 502Q387 502 246.5 635.5Q106 769 106 987Q106 1228 262.5 1373.0Q419 1518 682 1518Q974 1518 1134.0 1321.0Q1294 1124 1294 764Q1294 394 1107.0 182.5Q920 -29 594 -29Q489 -29 393.0 -13.5Q297 2 205 33ZM680 752Q781 752 832.0 817.5Q883 883 883 1014Q883 1144 832.0 1210.0Q781 1276 680 1276Q579 1276 528.0 1210.0Q477 1144 477 1014Q477 883 528.0 817.5Q579 752 680 752Z" transform="translate(385.905724 632.313510) scale(0.18013468 -0.16160310)" fill="#052940" fill-rule="evenodd"/>
+</svg>

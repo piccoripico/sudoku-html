@@ -1,7 +1,7 @@
 import { deriveBoardState, type Coordinate } from './board-analysis.js';
 import { cloneBoard, createNotesBoard, restoreSnapshot, type CellPosition, type HistorySnapshot, type NotesBoard } from './history.js';
 import type { Language } from './i18n.js';
-import type { RestoredSaveFileV1 } from './persistence.js';
+import type { RestoredSaveFile } from './persistence.js';
 import type { Board, Digit } from './sudoku.js';
 import { createTimerState, type TimerState } from './timer.js';
 
@@ -81,7 +81,7 @@ export function applyGeneratedPuzzleState(
 
 export function applyRestoredGameState(
   state: GameState,
-  game: Readonly<RestoredSaveFileV1['game']>,
+  game: Readonly<RestoredSaveFile['game']>,
   now = Date.now()
 ): void {
   state.puzzle = game.puzzle;

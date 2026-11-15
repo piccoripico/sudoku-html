@@ -16,6 +16,7 @@ blob-report/
 
 # Local-only project workspaces
 .local/
+docs/history/
 docs/EXTENSION_STORE_SUBMISSION/
 
 # Tool caches and logs
@@ -43,3 +44,10 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Generated Python files
+__pycache__/
+*.pyc
+
+# Obsolete README PNG screenshots
+docs/READMEs/screenshots/*.png

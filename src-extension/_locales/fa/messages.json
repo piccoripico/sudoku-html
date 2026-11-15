@@ -1,0 +1,14 @@
+{
+  "extensionName": {
+    "message": "One-Click Sudoku"
+  },
+  "extensionShortName": {
+    "message": "Sudoku"
+  },
+  "extensionDescription": {
+    "message": "سودوکو را از نوار ابزار باز کنید و آفلاین بازی کنید."
+  },
+  "extensionActionTitle": {
+    "message": "باز کردن سودوکو"
+  }
+}

@@ -3,8 +3,10 @@ import { requireElement } from './dom.js';
 export interface UiElements {
   boardEl: HTMLDivElement;
   padEl: HTMLDivElement;
+  padModesEl: HTMLDivElement;
+  clearPadButtonEl: HTMLButtonElement;
   statusEl: HTMLDivElement;
-  statsEl: HTMLDivElement;
+  statsEl: HTMLUListElement;
   timerEl: HTMLDivElement;
   undoEl: HTMLButtonElement;
   redoEl: HTMLButtonElement;
@@ -13,6 +15,14 @@ export interface UiElements {
   helpTitleEl: HTMLHeadingElement;
   helpContentEl: HTMLDivElement;
   helpCloseEl: HTMLButtonElement;
+  highlightSettingsButtonEl: HTMLButtonElement;
+  highlightSettingsOverlayEl: HTMLDivElement;
+  highlightSettingsTitleEl: HTMLHeadingElement;
+  highlightSettingsCloseEl: HTMLButtonElement;
+  highlightCompletedToggleEl: HTMLInputElement;
+  highlightCompletedToggleTextEl: HTMLSpanElement;
+  highlightDuplicateToggleEl: HTMLInputElement;
+  highlightDuplicateToggleTextEl: HTMLSpanElement;
   clueCountEl: HTMLSelectElement;
   seedInputEl: HTMLInputElement;
   seedFieldEl: HTMLDivElement;
@@ -33,15 +43,17 @@ export interface UiElements {
   hintEl: HTMLButtonElement;
   solveEl: HTMLButtonElement;
   padTitleEl: HTMLHeadingElement;
-  hintTextEl: HTMLParagraphElement;
+  hintTextEl: HTMLUListElement;
 }
 
 export function requireUiElements(): UiElements {
   return {
     boardEl: requireElement('board', HTMLDivElement),
     padEl: requireElement('pad', HTMLDivElement),
+    padModesEl: requireElement('padModes', HTMLDivElement),
+    clearPadButtonEl: requireElement('clearPad', HTMLButtonElement),
     statusEl: requireElement('status', HTMLDivElement),
-    statsEl: requireElement('stats', HTMLDivElement),
+    statsEl: requireElement('stats', HTMLUListElement),
     timerEl: requireElement('timer', HTMLDivElement),
     undoEl: requireElement('undo', HTMLButtonElement),
     redoEl: requireElement('redo', HTMLButtonElement),
@@ -50,6 +62,14 @@ export function requireUiElements(): UiElements {
     helpTitleEl: requireElement('helpTitle', HTMLHeadingElement),
     helpContentEl: requireElement('helpContent', HTMLDivElement),
     helpCloseEl: requireElement('helpClose', HTMLButtonElement),
+    highlightSettingsButtonEl: requireElement('highlightSettings', HTMLButtonElement),
+    highlightSettingsOverlayEl: requireElement('highlightSettingsOverlay', HTMLDivElement),
+    highlightSettingsTitleEl: requireElement('highlightSettingsTitle', HTMLHeadingElement),
+    highlightSettingsCloseEl: requireElement('highlightSettingsClose', HTMLButtonElement),
+    highlightCompletedToggleEl: requireElement('highlightCompletedToggle', HTMLInputElement),
+    highlightCompletedToggleTextEl: requireElement('highlightCompletedToggleText', HTMLSpanElement),
+    highlightDuplicateToggleEl: requireElement('highlightDuplicateToggle', HTMLInputElement),
+    highlightDuplicateToggleTextEl: requireElement('highlightDuplicateToggleText', HTMLSpanElement),
     clueCountEl: requireElement('clueCount', HTMLSelectElement),
     seedInputEl: requireElement('seed', HTMLInputElement),
     seedFieldEl: requireElement('seedField', HTMLDivElement),
@@ -70,6 +90,6 @@ export function requireUiElements(): UiElements {
     hintEl: requireElement('hint', HTMLButtonElement),
     solveEl: requireElement('solve', HTMLButtonElement),
     padTitleEl: requireElement('padTitle', HTMLHeadingElement),
-    hintTextEl: requireElement('hintText', HTMLParagraphElement)
+    hintTextEl: requireElement('hintText', HTMLUListElement)
   };
 }

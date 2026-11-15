@@ -1,0 +1,14 @@
+{
+  "extensionName": {
+    "message": "Sudoku con un clic"
+  },
+  "extensionShortName": {
+    "message": "Sudoku"
+  },
+  "extensionDescription": {
+    "message": "Abre Sudoku desde la barra de herramientas con un clic y juega sin conexión."
+  },
+  "extensionActionTitle": {
+    "message": "Abrir Sudoku con un clic"
+  }
+}

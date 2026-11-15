@@ -1,0 +1,14 @@
+{
+  "extensionName": {
+    "message": "One-Click Sudoku"
+  },
+  "extensionShortName": {
+    "message": "Sudoku"
+  },
+  "extensionDescription": {
+    "message": "Araç çubuğundan Sudoku açın ve çevrimdışı oynayın."
+  },
+  "extensionActionTitle": {
+    "message": "Sudoku aç"
+  }
+}

@@ -3,6 +3,8 @@ export const CLUE_COUNT_STORAGE_KEY = 'sudoku_clue_count';
 export const SEED_STORAGE_KEY = 'sudoku_seed';
 export const LANGUAGE_STORAGE_KEY = 'sudoku_lang';
 export const THEME_STORAGE_KEY = 'sudoku_theme';
+export const COMPLETED_HIGHLIGHT_STORAGE_KEY = 'sudoku_highlight_completed';
+export const DUPLICATE_HIGHLIGHT_STORAGE_KEY = 'sudoku_highlight_duplicate';
 
 export interface StorageLike {
   getItem(key: string): string | null;
@@ -15,7 +17,9 @@ const PREFERENCE_STORAGE_KEYS = [
   CLUE_COUNT_STORAGE_KEY,
   SEED_STORAGE_KEY,
   LANGUAGE_STORAGE_KEY,
-  THEME_STORAGE_KEY
+  THEME_STORAGE_KEY,
+  COMPLETED_HIGHLIGHT_STORAGE_KEY,
+  DUPLICATE_HIGHLIGHT_STORAGE_KEY
 ];
 
 function resolveStorage(storage?: StorageLike | null): StorageLike | null {
@@ -73,6 +77,14 @@ function removeRawStorageValue(key: string, storage?: StorageLike | null): boole
   } catch {
     return false;
   }
+}
+
+function parseStoredBoolean(rawValue: string | null, fallback: boolean): boolean {
+  if (rawValue === null) {
+    return fallback;
+  }
+
+  return rawValue === 'true';
 }
 
 export function isPreferencePersistenceEnabled(storage?: StorageLike | null): boolean {
@@ -168,4 +180,20 @@ export function storeSeed(value: unknown, storage?: StorageLike | null): boolean
   }
 
   return storePreferenceValue(SEED_STORAGE_KEY, seed, storage);
+}
+
+export function readStoredCompletedHighlight(storage?: StorageLike | null): boolean {
+  return parseStoredBoolean(readPreferenceValue(COMPLETED_HIGHLIGHT_STORAGE_KEY, storage), true);
+}
+
+export function storeCompletedHighlight(value: boolean, storage?: StorageLike | null): boolean {
+  return storePreferenceValue(COMPLETED_HIGHLIGHT_STORAGE_KEY, String(Boolean(value)), storage);
+}
+
+export function readStoredDuplicateHighlight(storage?: StorageLike | null): boolean {
+  return parseStoredBoolean(readPreferenceValue(DUPLICATE_HIGHLIGHT_STORAGE_KEY, storage), true);
+}
+
+export function storeDuplicateHighlight(value: boolean, storage?: StorageLike | null): boolean {
+  return storePreferenceValue(DUPLICATE_HIGHLIGHT_STORAGE_KEY, String(Boolean(value)), storage);
 }

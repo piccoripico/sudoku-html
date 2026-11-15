@@ -1,0 +1,14 @@
+{
+  "extensionName": {
+    "message": "One-Click Sudoku"
+  },
+  "extensionShortName": {
+    "message": "Sudoku"
+  },
+  "extensionDescription": {
+    "message": "Fungua Sudoku kwenye upau wa zana na ucheze bila intaneti."
+  },
+  "extensionActionTitle": {
+    "message": "Fungua Sudoku"
+  }
+}

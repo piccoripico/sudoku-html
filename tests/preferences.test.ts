@@ -3,6 +3,8 @@ import test from 'node:test';
 
 import {
   CLUE_COUNT_STORAGE_KEY,
+  COMPLETED_HIGHLIGHT_STORAGE_KEY,
+  DUPLICATE_HIGHLIGHT_STORAGE_KEY,
   LANGUAGE_STORAGE_KEY,
   PREFERENCES_ENABLED_STORAGE_KEY,
   SEED_STORAGE_KEY,
@@ -11,9 +13,13 @@ import {
   normalizePreferenceStorage,
   readPreferenceValue,
   readStoredClueCount,
+  readStoredCompletedHighlight,
+  readStoredDuplicateHighlight,
   readStoredSeed,
   setPreferencePersistenceEnabled,
   storeClueCount,
+  storeCompletedHighlight,
+  storeDuplicateHighlight,
   storePreferenceValue,
   storeSeed,
   type StorageLike
@@ -40,7 +46,9 @@ test('preference persistence is off by default and stale values are removed', ()
     [CLUE_COUNT_STORAGE_KEY]: '28',
     [SEED_STORAGE_KEY]: '12345',
     [LANGUAGE_STORAGE_KEY]: 'ja',
-    [THEME_STORAGE_KEY]: 'dark'
+    [THEME_STORAGE_KEY]: 'dark',
+    [COMPLETED_HIGHLIGHT_STORAGE_KEY]: 'false',
+    [DUPLICATE_HIGHLIGHT_STORAGE_KEY]: 'false'
   });
 
   assert.equal(normalizePreferenceStorage(storage), false);
@@ -50,6 +58,8 @@ test('preference persistence is off by default and stale values are removed', ()
   assert.equal(storage.getItem(SEED_STORAGE_KEY), null);
   assert.equal(storage.getItem(LANGUAGE_STORAGE_KEY), null);
   assert.equal(storage.getItem(THEME_STORAGE_KEY), null);
+  assert.equal(storage.getItem(COMPLETED_HIGHLIGHT_STORAGE_KEY), null);
+  assert.equal(storage.getItem(DUPLICATE_HIGHLIGHT_STORAGE_KEY), null);
 });
 
 test('opting in stores the enabled flag and allows preferences to persist', () => {
@@ -61,11 +71,15 @@ test('opting in stores the enabled flag and allows preferences to persist', () =
   assert.equal(storeSeed('001234', storage), true);
   assert.equal(storePreferenceValue(LANGUAGE_STORAGE_KEY, 'ja', storage), true);
   assert.equal(storePreferenceValue(THEME_STORAGE_KEY, 'dark', storage), true);
+  assert.equal(storeCompletedHighlight(false, storage), true);
+  assert.equal(storeDuplicateHighlight(true, storage), true);
 
   assert.equal(readStoredClueCount(storage), 28);
   assert.equal(readStoredSeed(storage), '001234');
   assert.equal(readPreferenceValue(LANGUAGE_STORAGE_KEY, storage), 'ja');
   assert.equal(readPreferenceValue(THEME_STORAGE_KEY, storage), 'dark');
+  assert.equal(readStoredCompletedHighlight(storage), false);
+  assert.equal(readStoredDuplicateHighlight(storage), true);
 });
 
 test('opting out removes the enabled flag and every saved preference', () => {
@@ -74,7 +88,9 @@ test('opting out removes the enabled flag and every saved preference', () => {
     [CLUE_COUNT_STORAGE_KEY]: '24',
     [SEED_STORAGE_KEY]: '98765',
     [LANGUAGE_STORAGE_KEY]: 'en',
-    [THEME_STORAGE_KEY]: 'light'
+    [THEME_STORAGE_KEY]: 'light',
+    [COMPLETED_HIGHLIGHT_STORAGE_KEY]: 'false',
+    [DUPLICATE_HIGHLIGHT_STORAGE_KEY]: 'false'
   });
 
   assert.equal(setPreferencePersistenceEnabled(false, storage), true);
@@ -84,6 +100,8 @@ test('opting out removes the enabled flag and every saved preference', () => {
   assert.equal(storage.getItem(SEED_STORAGE_KEY), null);
   assert.equal(storage.getItem(LANGUAGE_STORAGE_KEY), null);
   assert.equal(storage.getItem(THEME_STORAGE_KEY), null);
+  assert.equal(storage.getItem(COMPLETED_HIGHLIGHT_STORAGE_KEY), null);
+  assert.equal(storage.getItem(DUPLICATE_HIGHLIGHT_STORAGE_KEY), null);
 });
 
 test('preferences are not written while persistence is disabled', () => {
@@ -93,6 +111,8 @@ test('preferences are not written while persistence is disabled', () => {
   assert.equal(storeSeed('123', storage), false);
   assert.equal(storePreferenceValue(LANGUAGE_STORAGE_KEY, 'ja', storage), false);
   assert.equal(storePreferenceValue(THEME_STORAGE_KEY, 'dark', storage), false);
+  assert.equal(storeCompletedHighlight(false, storage), false);
+  assert.equal(storeDuplicateHighlight(false, storage), false);
   assert.equal(storage.getItem(CLUE_COUNT_STORAGE_KEY), null);
   assert.equal(storage.getItem(SEED_STORAGE_KEY), null);
 });
@@ -117,6 +137,13 @@ test('invalid stored clue count is ignored when persistence is enabled', () => {
   assert.equal(readStoredClueCount(storage), null);
 });
 
+test('highlight preferences default to enabled when unset', () => {
+  const storage = createStorage({ [PREFERENCES_ENABLED_STORAGE_KEY]: 'true' });
+
+  assert.equal(readStoredCompletedHighlight(storage), true);
+  assert.equal(readStoredDuplicateHighlight(storage), true);
+});
+
 test('storage failures are handled without throwing', () => {
   const storage = {
     getItem() {
@@ -135,7 +162,11 @@ test('storage failures are handled without throwing', () => {
   assert.equal(readPreferenceValue(LANGUAGE_STORAGE_KEY, storage), null);
   assert.equal(readStoredClueCount(storage), null);
   assert.equal(readStoredSeed(storage), '');
+  assert.equal(readStoredCompletedHighlight(storage), true);
+  assert.equal(readStoredDuplicateHighlight(storage), true);
   assert.equal(setPreferencePersistenceEnabled(true, storage), false);
   assert.equal(storeClueCount(32, storage), false);
   assert.equal(storeSeed('123', storage), false);
+  assert.equal(storeCompletedHighlight(false, storage), false);
+  assert.equal(storeDuplicateHighlight(false, storage), false);
 });

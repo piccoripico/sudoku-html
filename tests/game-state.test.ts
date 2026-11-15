@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { readFile } from 'node:fs/promises';
 
 import { applyGeneratedPuzzleState, applyRestoredGameState, createInitialGameState } from '../src/lib/game-state.js';
 import { requireIndex } from '../src/lib/indexed-access.js';
-import { parseSaveText } from '../src/lib/persistence.js';
+import { createSaveData, parseSaveText } from '../src/lib/persistence.js';
+import { generatePuzzle } from '../src/lib/sudoku.js';
 import type { Board, CellValue } from '../src/lib/sudoku.js';
 
 test('initial game state preserves the established application defaults', () => {
@@ -100,9 +100,18 @@ test('generated-puzzle state application resets puzzle-scoped data while preserv
   assert.equal(state.timer, timerBefore);
 });
 
-test('restored-game state application rebuilds derived state and restores snapshot data', async () => {
-  const text = await readFile(new URL('./fixtures/v1.7.1-save.json', import.meta.url), 'utf8');
-  const restored = parseSaveText(text);
+test('restored-game state application rebuilds derived state and restores snapshot data', () => {
+  const source = createInitialGameState();
+  const seed = 'restore-state';
+  const generated = generatePuzzle(24, seed);
+  applyGeneratedPuzzleState(source, {
+    puzzle: generated.puzzleBoard,
+    solution: generated.solutionBoard,
+    actualClueCount: generated.actualClueCount,
+    seedValue: seed,
+    seedWasRandom: false
+  });
+  const restored = parseSaveText(JSON.stringify(createSaveData(source, 1000)));
   const state = createInitialGameState();
   state.currentLang = 'en';
   const now = 123456789;

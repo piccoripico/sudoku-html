@@ -11,7 +11,8 @@ const buildDir = path.join(rootDir, '.build');
 const browserBuildDir = path.join(buildDir, 'browser');
 const extensionBuildDir = path.join(buildDir, 'extension');
 const distDir = path.join(rootDir, 'dist');
-const extensionDistDir = path.join(distDir, 'extension');
+const chromiumDistDir = path.join(distDir, 'extension-chromium');
+const firefoxDistDir = path.join(distDir, 'extension-firefox');
 const tscPath = path.join(rootDir, 'node_modules', 'typescript', 'bin', 'tsc');
 
 const importPattern = /^\s*import\s+([^'\"]+?)\s+from\s+['\"](.+)['\"];\s*$/gm;
@@ -145,36 +146,56 @@ async function buildSingleFileHtml(): Promise<void> {
   const cssSource = normalizeLineEndings(await readFile(path.join(srcDir, 'styles.css'), 'utf8'));
   const jsSource = await bundleJavaScript(path.join(browserBuildDir, 'main.js'));
   const themeJsSource = await bundleJavaScript(path.join(browserBuildDir, 'theme.js'));
+  const icon = await readFile(path.join(extensionSrcDir, 'icons/icon128.png'));
 
   const output = htmlTemplate
     .replace('<script src="./theme-init.js"></script>', `<script>\n${escapeInlineScript(themeInitSource)}\n</script>`)
     .replace('<link rel="stylesheet" href="./styles.css" />', `<style>\n${escapeInlineStyle(cssSource)}\n</style>`)
+    .replace('src="./icons/icon128.png"', `src="data:image/png;base64,${icon.toString('base64')}"`)
     .replace('<script type="module" src="./main.js"></script>', `<script>\n${escapeInlineScript(jsSource)}\n</script>`)
     .replace('<script type="module" src="./theme.js"></script>', `<script>\n${escapeInlineScript(themeJsSource)}\n</script>`);
 
   await mkdir(distDir, { recursive: true });
-  await writeFile(path.join(distDir, 'Sudoku.html'), output, 'utf8');
+  await writeFile(path.join(distDir, `Sudoku_v${packageVersion}.html`), output, 'utf8');
 }
 
-async function copyExtensionStaticFiles(): Promise<void> {
-  await cp(path.join(srcDir, 'index.html'), path.join(extensionDistDir, 'index.html'));
-  await cp(path.join(srcDir, 'styles.css'), path.join(extensionDistDir, 'styles.css'));
-  await cp(path.join(extensionSrcDir, 'manifest.json'), path.join(extensionDistDir, 'manifest.json'));
-  await cp(path.join(extensionSrcDir, '_locales'), path.join(extensionDistDir, '_locales'), { recursive: true });
-  await cp(path.join(extensionSrcDir, 'icons'), path.join(extensionDistDir, 'icons'), { recursive: true });
+const packageData: unknown = JSON.parse(await readFile(path.join(rootDir, 'package.json'), 'utf8'));
+if (!packageData || typeof packageData !== 'object' || !('version' in packageData)
+    || typeof packageData.version !== 'string' || !/^\d+\.\d+\.\d+$/.test(packageData.version)) {
+  throw new Error('package.json must define an x.y.z version.');
+}
+const packageVersion = packageData.version;
+
+async function copyExtensionStaticFiles(targetDir: string, firefox: boolean): Promise<void> {
+  await cp(path.join(srcDir, 'index.html'), path.join(targetDir, 'index.html'));
+  await cp(path.join(srcDir, 'styles.css'), path.join(targetDir, 'styles.css'));
+  const manifest = JSON.parse(await readFile(path.join(extensionSrcDir, 'manifest.template.json'), 'utf8'));
+  manifest.version = packageVersion;
+  if (firefox) {
+    delete manifest.offline_enabled;
+    manifest.background = { scripts: ['background.js'] };
+    manifest.browser_specific_settings = {
+      gecko: {
+        id: 'sudoku-html@piccoripico.github.io',
+        strict_min_version: '140.0',
+        data_collection_permissions: { required: ['none'] }
+      }
+    };
+  }
+  await writeFile(path.join(targetDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+  await cp(path.join(extensionSrcDir, '_locales'), path.join(targetDir, '_locales'), { recursive: true });
+  await cp(path.join(extensionSrcDir, 'icons'), path.join(targetDir, 'icons'), { recursive: true });
 }
 
-async function buildExtension(): Promise<void> {
-  await mkdir(extensionDistDir, { recursive: true });
-  await cp(browserBuildDir, extensionDistDir, { recursive: true });
-  await copyExtensionStaticFiles();
-  await cp(
-    path.join(extensionBuildDir, 'background.js'),
-    path.join(extensionDistDir, 'background.js')
-  );
+async function buildExtension(targetDir: string, firefox: boolean): Promise<void> {
+  await mkdir(targetDir, { recursive: true });
+  await cp(browserBuildDir, targetDir, { recursive: true });
+  await copyExtensionStaticFiles(targetDir, firefox);
+  await cp(path.join(extensionBuildDir, 'background.js'), path.join(targetDir, 'background.js'));
 }
 
 await rm(distDir, { recursive: true, force: true });
 await compileRuntimeJavaScript();
 await buildSingleFileHtml();
-await buildExtension();
+await buildExtension(chromiumDistDir, false);
+await buildExtension(firefoxDistDir, true);

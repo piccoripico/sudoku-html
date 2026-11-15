@@ -8,6 +8,7 @@ import {
 import {
   I18N,
   isLanguage,
+  resolveLanguage,
   translate,
   type TranslationKey,
   type TranslationVariables
@@ -17,12 +18,12 @@ import { applyGeneratedPuzzleState, applyRestoredGameState, createInitialGameSta
 import { requireUiElements } from './lib/ui-elements.js';
 import { requireIndex } from './lib/indexed-access.js';
 import { isButtonActivationTarget, isTypingTarget } from './lib/input.js';
-import { LANGUAGE_STORAGE_KEY, THEME_STORAGE_KEY, isPreferencePersistenceEnabled, normalizePreferenceStorage, readPreferenceValue, readStoredClueCount, readStoredSeed, setPreferencePersistenceEnabled, storeClueCount, storePreferenceValue, storeSeed } from './lib/preferences.js';
+import { LANGUAGE_STORAGE_KEY, THEME_STORAGE_KEY, isPreferencePersistenceEnabled, normalizePreferenceStorage, readPreferenceValue, readStoredClueCount, readStoredCompletedHighlight, readStoredDuplicateHighlight, readStoredSeed, setPreferencePersistenceEnabled, storeClueCount, storeCompletedHighlight, storeDuplicateHighlight, storePreferenceValue, storeSeed } from './lib/preferences.js';
 import {
   createSaveData,
   createSaveFilename,
   parseSaveText,
-  type RestoredSaveFileV1
+  type RestoredSaveFile
 } from './lib/persistence.js';
 import { DIGITS, generatePuzzle, type CellValue, type Digit } from './lib/sudoku.js';
 import { getElapsedMs, pauseTimer, startTimer } from './lib/timer.js';
@@ -35,6 +36,8 @@ interface ApplyValueOptions {
 const {
   boardEl,
   padEl,
+  padModesEl,
+  clearPadButtonEl,
   statusEl,
   statsEl,
   timerEl,
@@ -45,6 +48,14 @@ const {
   helpTitleEl,
   helpContentEl,
   helpCloseEl,
+  highlightSettingsButtonEl,
+  highlightSettingsOverlayEl,
+  highlightSettingsTitleEl,
+  highlightSettingsCloseEl,
+  highlightCompletedToggleEl,
+  highlightCompletedToggleTextEl,
+  highlightDuplicateToggleEl,
+  highlightDuplicateToggleTextEl,
   clueCountEl,
   seedInputEl,
   seedFieldEl,
@@ -72,9 +83,10 @@ const state = createInitialGameState();
 
 let noteToggleEl: HTMLButtonElement | null = null;
 let highlightNoteToggleEl: HTMLButtonElement | null = null;
-let clearPadButtonEl: HTMLButtonElement | null = null;
 let timerInterval: ReturnType<typeof setInterval> | null = null;
 let statusResetTimeout: ReturnType<typeof setTimeout> | null = null;
+let highlightCompletedNumbersEnabled = true;
+let highlightDuplicateNumbersEnabled = true;
 
 function t(key: TranslationKey, vars: TranslationVariables = {}): string {
   return translate(state.currentLang, key, vars);
@@ -130,7 +142,9 @@ function storeCurrentPreferences() {
     storeClueCount(clueCountEl.value),
     storeSeed(seedInputEl.value),
     storePreferenceValue(LANGUAGE_STORAGE_KEY, state.currentLang),
-    storePreferenceValue(THEME_STORAGE_KEY, themeSelectEl.value)
+    storePreferenceValue(THEME_STORAGE_KEY, themeSelectEl.value),
+    storeCompletedHighlight(highlightCompletedNumbersEnabled),
+    storeDuplicateHighlight(highlightDuplicateNumbersEnabled)
   ].every(Boolean);
 }
 
@@ -151,6 +165,50 @@ function initPreferencePersistence() {
     }
 
     updatePreferencePersistenceControl();
+  });
+}
+
+
+function updateHighlightSettingsControls() {
+  highlightCompletedToggleEl.checked = highlightCompletedNumbersEnabled;
+  highlightDuplicateToggleEl.checked = highlightDuplicateNumbersEnabled;
+}
+
+function setHighlightSettingsOpen(open: boolean): void {
+  highlightSettingsOverlayEl.hidden = !open;
+  highlightSettingsButtonEl.setAttribute('aria-expanded', String(open));
+  document.body.classList.toggle('help-open', open || !helpOverlayEl.hidden);
+
+  if (open) {
+    highlightSettingsCloseEl.focus();
+  } else {
+    highlightSettingsButtonEl.focus();
+  }
+}
+
+function initHighlightSettings() {
+  highlightCompletedNumbersEnabled = readStoredCompletedHighlight();
+  highlightDuplicateNumbersEnabled = readStoredDuplicateHighlight();
+  updateHighlightSettingsControls();
+
+  highlightSettingsButtonEl.addEventListener('click', () => setHighlightSettingsOpen(true));
+  highlightSettingsCloseEl.addEventListener('click', () => setHighlightSettingsOpen(false));
+  highlightSettingsOverlayEl.addEventListener('click', (event) => {
+    if (event.target === highlightSettingsOverlayEl) {
+      setHighlightSettingsOpen(false);
+    }
+  });
+
+  highlightCompletedToggleEl.addEventListener('change', () => {
+    highlightCompletedNumbersEnabled = highlightCompletedToggleEl.checked;
+    storeCompletedHighlight(highlightCompletedNumbersEnabled);
+    renderBoard();
+  });
+
+  highlightDuplicateToggleEl.addEventListener('change', () => {
+    highlightDuplicateNumbersEnabled = highlightDuplicateToggleEl.checked;
+    storeDuplicateHighlight(highlightDuplicateNumbersEnabled);
+    renderBoard();
   });
 }
 
@@ -234,9 +292,7 @@ function syncPadModeButtons() {
     highlightNoteToggleEl.textContent = t('redNoteButton');
   }
 
-  if (clearPadButtonEl) {
-    clearPadButtonEl.textContent = t('clearButton');
-  }
+  clearPadButtonEl.textContent = t('clearButton');
 }
 
 function toggleNoteMode(force?: boolean): void {
@@ -294,11 +350,18 @@ function updateClueOptionLabels() {
 }
 
 function updateStats() {
-  const hintText = t('statsHintUsed', { count: state.hintCount });
-  const solutionText = t('statsSolutionShown', { state: state.solutionRevealed ? t('yes') : t('no') });
-  const clueText = t('statsClues', { count: state.selectedClueCount });
-  const seedText = t('statsSeed', { seed: formatSeedDisplay(state.selectedSeedRaw, state.selectedSeedWasRandom) });
-  statsEl.textContent = `${hintText} / ${solutionText} / ${clueText} / ${seedText}`;
+  const messages = [
+    t('statsClues', { count: state.selectedClueCount }),
+    t('statsSeed', { seed: formatSeedDisplay(state.selectedSeedRaw, state.selectedSeedWasRandom) }),
+    t('statsHintUsed', { count: state.hintCount }),
+    t('statsSolutionShown', { state: state.solutionRevealed ? t('yes') : t('no') })
+  ];
+
+  statsEl.replaceChildren(...messages.map((message) => {
+    const item = document.createElement('li');
+    item.textContent = message;
+    return item;
+  }));
 }
 
 function setStatus(message: string, type = ''): void {
@@ -368,9 +431,6 @@ function renderHelp() {
         entry.append(link);
       }
 
-      if ('note' in item && item.note) {
-        entry.append(document.createTextNode(` ${item.note}`));
-      }
 
       list.appendChild(entry);
     }
@@ -383,7 +443,7 @@ function renderHelp() {
 function setHelpOpen(open: boolean): void {
   helpOverlayEl.hidden = !open;
   helpButtonEl.setAttribute('aria-expanded', String(open));
-  document.body.classList.toggle('help-open', open);
+  document.body.classList.toggle('help-open', open || !highlightSettingsOverlayEl.hidden);
 
   if (open) {
     helpCloseEl.focus();
@@ -393,15 +453,16 @@ function setHelpOpen(open: boolean): void {
 }
 
 function applyLanguage(lang: string): void {
-  state.currentLang = isLanguage(lang) ? lang : 'ja';
+  state.currentLang = isLanguage(lang) ? lang : 'en';
   document.documentElement.lang = state.currentLang;
+  document.documentElement.dir = ['ar', 'fa', 'ur'].includes(state.currentLang) ? 'rtl' : 'ltr';
   document.title = t('title');
 
   if (langSelectEl.value !== state.currentLang) {
     langSelectEl.value = state.currentLang;
   }
 
-  titleEl.textContent = t('title');
+  titleEl.setAttribute('aria-label', t('title'));
   clueCountLabelEl.textContent = t('clueLabel');
   seedLabelEl.textContent = t('seedLabel');
   langLabelEl.textContent = t('langLabel');
@@ -414,13 +475,23 @@ function applyLanguage(lang: string): void {
   saveButtonEl.textContent = t('saveGame');
   loadButtonEl.textContent = t('loadGame');
   padTitleEl.textContent = t('padTitle');
-  hintTextEl.textContent = t('hintText');
+  highlightSettingsButtonEl.textContent = t('highlightSettingsButton');
+  highlightSettingsTitleEl.textContent = t('highlightSettingsTitle');
+  highlightSettingsCloseEl.textContent = t('helpClose');
+  highlightCompletedToggleTextEl.textContent = t('highlightCompletedToggle');
+  highlightDuplicateToggleTextEl.textContent = t('highlightDuplicateToggle');
+  hintTextEl.replaceChildren(...[t('padHelpLine1'), t('padHelpLine2')].map((line) => {
+    const item = document.createElement('li');
+    item.textContent = line;
+    return item;
+  }));
   boardEl.setAttribute('aria-label', t('boardAriaLabel'));
   undoEl.textContent = t('undo');
   redoEl.textContent = t('redo');
 
   updateClueOptionLabels();
   syncPadModeButtons();
+  updateHighlightSettingsControls();
 
   renderHelp();
   updateStats();
@@ -429,7 +500,7 @@ function applyLanguage(lang: string): void {
 
 function initLanguage() {
   const savedLang = readPreferenceValue(LANGUAGE_STORAGE_KEY);
-  const browserLang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+  const browserLang = resolveLanguage(navigator.languages?.length ? [...navigator.languages] : [navigator.language]);
   const preferred = savedLang && isLanguage(savedLang) ? savedLang : browserLang;
 
   applyLanguage(preferred);
@@ -457,6 +528,7 @@ function buildBoard() {
 
 function buildPad() {
   padEl.innerHTML = '';
+  padModesEl.innerHTML = '';
 
   for (const value of DIGITS) {
     const button = document.createElement('button');
@@ -473,17 +545,12 @@ function buildPad() {
   noteToggleEl = document.createElement('button');
   noteToggleEl.className = 'pad-action';
   noteToggleEl.addEventListener('click', () => toggleNoteMode());
-  padEl.appendChild(noteToggleEl);
+  padModesEl.appendChild(noteToggleEl);
 
   highlightNoteToggleEl = document.createElement('button');
   highlightNoteToggleEl.className = 'pad-action red-note';
   highlightNoteToggleEl.addEventListener('click', () => toggleHighlightNoteMode());
-  padEl.appendChild(highlightNoteToggleEl);
-
-  clearPadButtonEl = document.createElement('button');
-  clearPadButtonEl.classList.add('secondary');
-  clearPadButtonEl.addEventListener('click', clearSelectedCell);
-  padEl.appendChild(clearPadButtonEl);
+  padModesEl.appendChild(highlightNoteToggleEl);
 
   syncPadModeButtons();
 }
@@ -601,8 +668,8 @@ function renderCell(row: number, col: number, conflicts: ReadonlySet<string>, co
 
   cell.classList.toggle('selected', Boolean(isSelected));
   cell.classList.toggle('given', state.givens.has(cellKey(row, col)));
-  cell.classList.toggle('completed-number', Boolean(value && completedNumbers.has(value) && value === solutionValue));
-  cell.classList.toggle('conflict', conflicts.has(cellKey(row, col)));
+  cell.classList.toggle('completed-number', Boolean(highlightCompletedNumbersEnabled && value && completedNumbers.has(value) && value === solutionValue));
+  cell.classList.toggle('conflict', Boolean(highlightDuplicateNumbersEnabled && conflicts.has(cellKey(row, col))));
 
   cell.innerHTML = '';
   if (value) {
@@ -729,7 +796,7 @@ function loadNewPuzzle() {
   updateStatus();
 }
 
-function applyLoadedGame(saveData: RestoredSaveFileV1): void {
+function applyLoadedGame(saveData: RestoredSaveFile): void {
   const { game } = saveData;
 
   applyRestoredGameState(state, game);
@@ -834,6 +901,14 @@ function redoAction() {
 }
 
 function handleKey(event: KeyboardEvent): void {
+  if (!highlightSettingsOverlayEl.hidden) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      setHighlightSettingsOpen(false);
+    }
+    return;
+  }
+
   if (!helpOverlayEl.hidden) {
     if (event.key === 'Escape') {
       event.preventDefault();
@@ -926,6 +1001,7 @@ helpOverlayEl.addEventListener('click', (event) => {
     setHelpOpen(false);
   }
 });
+clearPadButtonEl.addEventListener('click', clearSelectedCell);
 undoEl.addEventListener('click', undoAction);
 redoEl.addEventListener('click', redoAction);
 document.addEventListener('keydown', handleKey);
@@ -933,6 +1009,7 @@ document.addEventListener('keydown', handleKey);
 buildBoard();
 buildPad();
 initPreferencePersistence();
+initHighlightSettings();
 initLanguage();
 initPuzzlePreferences();
 setStatus(t('statusLoading'));

@@ -1,0 +1,14 @@
+{
+  "extensionName": {
+    "message": "سودوكو بنقرة واحدة"
+  },
+  "extensionShortName": {
+    "message": "سودوكو"
+  },
+  "extensionDescription": {
+    "message": "افتح سودوكو بنقرة واحدة من شريط الأدوات والعب دون اتصال بالإنترنت."
+  },
+  "extensionActionTitle": {
+    "message": "فتح سودوكو بنقرة واحدة"
+  }
+}

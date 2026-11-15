@@ -28,7 +28,6 @@
   --complete-text: #166534;
   --conflict-bg: #fef3c7;
   --focus-ring: rgba(20, 184, 166, 0.35);
-  --selected-ring: rgba(20, 184, 166, 0.45);
   --active-ring: rgba(20, 184, 166, 0.2);
   --seed-highlight-bg: #ecfdf5;
   --red-note-border: #dc2626;
@@ -73,7 +72,6 @@
   --complete-text: #bbf7d0;
   --conflict-bg: #713f12;
   --focus-ring: rgba(45, 212, 191, 0.42);
-  --selected-ring: rgba(45, 212, 191, 0.58);
   --active-ring: rgba(45, 212, 191, 0.28);
   --seed-highlight-bg: #15352f;
   --red-note-border: #f87171;
@@ -110,6 +108,7 @@ body.help-open {
 }
 
 main {
+  container-type: inline-size;
   width: min(1080px, 100%);
   padding: clamp(16px, 3vw, 24px);
   border-radius: 20px;
@@ -136,13 +135,61 @@ h1 {
   align-items: center;
 }
 
+:root { --brand-wordmark: #0f172a; --brand-rule: #0d9488; }
+:root[data-theme="dark"] { --brand-wordmark: #f8fafc; --brand-rule: #5eead4; }
+
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  direction: ltr;
+}
+
+.brand-icon {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  object-fit: contain;
+}
+
+.brand-type {
+  display: grid;
+  gap: 1px;
+  color: var(--brand-wordmark);
+}
+
+.brand-wordmark {
+  font-size: clamp(26px, 3.2vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1;
+}
+
+.brand-caption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+}
+
+.brand-rule {
+  height: 3px;
+  border-radius: 3px;
+  flex: 1 1 auto;
+  background: var(--brand-rule);
+}
+
 .top-bar {
   display: grid;
   gap: 12px;
   margin-bottom: 18px;
 }
 
-.settings-grid {
+.settings-grid,
+.primary-actions {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
@@ -153,6 +200,11 @@ h1 {
   grid-template-rows: minmax(22px, auto) auto;
   gap: 6px;
   min-width: 0;
+}
+
+.field > label,
+.field-label-row > label:not(.preference-save-toggle) {
+  font-size: 14px;
 }
 
 .field-label-row {
@@ -196,19 +248,26 @@ h1 {
 }
 
 .utility-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 108px;
   align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
+  width: min(100%, calc(33cqw + 130px));
+  min-width: 0;
   gap: 12px;
   min-height: 52px;
 }
 
 .utility-buttons {
-  display: flex;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+  container-type: inline-size;
+  --button-font-preferred: 3cqw;
+}
+
+.utility-buttons button {
+  padding-inline: 6px;
 }
 
 .timer {
@@ -217,8 +276,10 @@ h1 {
   border-radius: 12px;
   background: var(--timer-bg);
   color: var(--timer-text);
+  font-size: 16px;
   font-weight: 700;
   text-align: center;
+  direction: ltr;
 }
 
 label {
@@ -236,11 +297,11 @@ button {
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 10px;
-  font-size: 16px;
 }
 
 input,
 select {
+  font-size: 16px;
   background: var(--control-bg);
   color: var(--text);
 }
@@ -269,12 +330,18 @@ button:focus-visible {
 }
 
 button {
+  min-width: 0;
   min-height: 46px;
   background: var(--control-bg);
   color: var(--text);
+  font-size: clamp(var(--button-font-min, 12px), var(--button-font-preferred, 1.3vw), var(--button-font-max, 16px));
+  line-height: 1.2;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  hyphens: auto;
   cursor: pointer;
   touch-action: manipulation;
-  white-space: nowrap;
   transition: transform 0.08s ease, box-shadow 0.12s ease;
 }
 
@@ -287,6 +354,7 @@ button.primary {
   border: none;
   background: linear-gradient(120deg, var(--primary-start), var(--primary-end));
   color: var(--primary-text);
+  font-weight: 700;
 }
 
 button.ghost {
@@ -294,21 +362,16 @@ button.ghost {
   border: 1px solid var(--line);
 }
 
-.action-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.primary-actions button {
-  flex: 1 1 180px;
-}
-
 .board-wrapper {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
   gap: 20px;
   align-items: start;
+}
+
+.sidebar {
+  display: grid;
+  gap: 12px;
 }
 
 .board {
@@ -321,6 +384,7 @@ button.ghost {
   border-radius: 14px;
   background: var(--surface);
   box-shadow: 0 10px 24px var(--shadow-board);
+  direction: ltr;
 }
 
 .cell {
@@ -360,13 +424,19 @@ button.ghost {
   border-left: 2px solid var(--strong-line);
 }
 
+/* The rounded board border owns the perimeter; cells only draw inner lines. */
+.cell[data-row="0"] { border-top: 0; }
+.cell[data-row="8"] { border-bottom: 0; }
+.cell[data-col="0"] { border-left: 0; }
+.cell[data-col="8"] { border-right: 0; }
+
 .cell.given {
   background: var(--surface-muted);
   font-weight: 700;
 }
 
 .cell.selected {
-  outline: 3px solid var(--selected-ring);
+  box-shadow: inset 0 0 0 3px var(--accent);
   z-index: 1;
 }
 
@@ -415,6 +485,7 @@ button.ghost {
 }
 
 .panel {
+  --pad-gap: 10px;
   display: grid;
   gap: 12px;
   padding: 18px;
@@ -422,6 +493,13 @@ button.ghost {
   border-radius: 16px;
   background: var(--surface);
   box-shadow: 0 10px 24px var(--shadow-panel);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
 }
 
 .panel h2 {
@@ -433,42 +511,57 @@ button.ghost {
   align-items: center;
 }
 
-.pad {
+.pad-clear {
+  width: calc((100% - 2 * var(--pad-gap)) / 3);
+  min-height: 36px;
+  padding: 6px 12px;
+  background: var(--surface-secondary);
+  --button-font-max: 14px;
+}
+
+.pad,
+.pad-modes {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
 }
 
+.pad {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--pad-gap);
+  direction: ltr;
+}
+
+.pad-modes {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .pad button,
-.pad .pad-action {
-  min-height: 56px;
-  min-width: 0;
+.pad-modes button {
   padding: 12px 8px;
   border-radius: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.pad button {
+  min-height: 56px;
+}
+
+.pad-modes button,
+.controls button {
+  min-height: 46px;
 }
 
 .pad button.num {
-  font-size: 20px;
+  --button-font-min: 17px;
+  --button-font-preferred: 2vw;
+  --button-font-max: 20px;
 }
 
-.pad .pad-action,
-.pad button.secondary {
-  font-size: 16px;
-}
-
-.pad .pad-action.red-note {
+.pad-modes .pad-action.red-note {
   padding-inline: 6px;
-  font-size: 13px;
   letter-spacing: -0.01em;
 }
 
-.pad button.secondary {
-  background: var(--surface-secondary);
-}
-
-.pad .pad-action {
+.pad-modes .pad-action {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -477,26 +570,26 @@ button.ghost {
   border: 1px solid var(--line);
 }
 
-.pad .pad-action.active {
+.pad-modes .pad-action.active {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--active-ring);
   font-weight: 700;
 }
 
-.pad .pad-action.red-note.active {
+.pad-modes .pad-action.red-note.active {
   border-color: var(--red-note-border);
   box-shadow: 0 0 0 2px var(--red-note-ring);
   color: var(--red-note-text);
 }
 
-.pad .pad-action:disabled {
+.pad-modes .pad-action:disabled {
   cursor: not-allowed;
   opacity: 0.55;
   transform: none;
   box-shadow: none;
 }
 
-.pad .pad-action.disabled {
+.pad-modes .pad-action.disabled {
   background: var(--surface-muted);
 }
 
@@ -507,21 +600,45 @@ button.ghost {
   margin-top: 0;
 }
 
-.hint-text,
-.stats,
+.pad-help-list,
+.stats-list,
 .status {
   margin: 0;
 }
 
-.hint-text,
-.stats {
+.pad-help-list,
+.stats-list {
+  display: grid;
+  gap: 8px;
+  padding-left: 20px;
   color: var(--text-muted);
   font-size: 14px;
+  line-height: 1.45;
+}
+
+.pad-help-list li::marker,
+.stats-list li::marker {
+  color: var(--accent);
+}
+
+.message-panel {
+  display: grid;
+  gap: 10px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 10px 24px var(--shadow-panel);
 }
 
 .status {
   color: var(--status-text);
+  font-size: 16px;
   font-weight: 600;
+  line-height: 1.5;
+  block-size: 3em;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
 }
 
 .status.success {
@@ -546,7 +663,8 @@ button.ghost {
   background: var(--overlay);
 }
 
-.help-dialog {
+.help-dialog,
+.settings-dialog {
   width: min(720px, 100%);
   max-height: min(85vh, 900px);
   overflow: auto;
@@ -554,6 +672,10 @@ button.ghost {
   border-radius: 18px;
   background: var(--surface);
   box-shadow: 0 24px 60px var(--shadow-dialog);
+}
+
+.settings-dialog {
+  width: min(420px, 100%);
 }
 
 .help-header {
@@ -577,6 +699,32 @@ button.ghost {
 .help-content {
   display: grid;
   gap: 14px;
+}
+
+.settings-dialog-content {
+  display: grid;
+  gap: 12px;
+}
+
+.toggle-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-muted);
+  cursor: pointer;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.toggle-option input {
+  margin-top: 2px;
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+  padding: 0;
 }
 
 .help-section {
@@ -615,7 +763,8 @@ button.ghost {
 }
 
 @media (max-width: 900px) {
-  .settings-grid {
+  .settings-grid,
+  .primary-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -626,6 +775,11 @@ button.ghost {
   .board-wrapper {
     grid-template-columns: 1fr;
   }
+
+  .sidebar {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
 }
 
 @media (max-width: 720px) {
@@ -633,47 +787,26 @@ button.ghost {
     justify-content: space-between;
   }
 
-  .utility-buttons {
-    justify-content: flex-start;
-  }
-
-  .primary-actions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .primary-actions button {
-    flex: auto;
-  }
 
   .board-wrapper {
     gap: 16px;
   }
 
-  .panel {
+  .sidebar {
+    grid-template-columns: 1fr;
+  }
+
+  .panel,
+  .message-panel {
     padding: 16px;
   }
 
-  .pad {
-    gap: 8px;
+  .panel {
+    --pad-gap: 8px;
   }
 
-  .pad button,
-  .pad .pad-action {
+  .pad button {
     min-height: 54px;
-  }
-
-  .pad button.num {
-    font-size: 18px;
-  }
-
-  .pad .pad-action,
-  .pad button.secondary {
-    font-size: 15px;
-  }
-
-  .pad .pad-action.red-note {
-    font-size: 12px;
   }
 
   .cell .notes {
@@ -686,24 +819,27 @@ button.ghost {
     padding: 12px;
   }
 
-  .hero,
-  .utility-actions {
+  .hero {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .utility-buttons {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .utility-actions {
+    grid-template-columns: minmax(0, 1fr);
     width: 100%;
-    gap: 8px;
+  }
+
+  .brand-lockup {
+    gap: 10px;
+  }
+
+  .utility-buttons {
+    width: 100%;
   }
 
   .utility-buttons button {
-    min-width: 0;
     min-height: 42px;
     padding: 8px 6px;
-    font-size: 14px;
   }
 
   .settings-grid {
@@ -718,7 +854,8 @@ button.ghost {
     margin-bottom: 10px;
   }
 
-  .help-dialog {
+  .help-dialog,
+  .settings-dialog {
     padding: 16px;
   }
 }
@@ -727,7 +864,6 @@ button.ghost {
   .utility-buttons button {
     min-height: 40px;
     padding: 8px 4px;
-    font-size: 13px;
   }
 
   .primary-actions,
@@ -735,21 +871,71 @@ button.ghost {
     grid-template-columns: 1fr;
   }
 
-  .pad button,
-  .pad .pad-action {
+  .pad button {
     min-height: 50px;
   }
+}
 
-  .pad button.num {
-    font-size: 17px;
+/* Desktop viewport fit: retain the header and full-size board around 920px viewport height. */
+@media (min-width: 901px) and (max-height: 980px) {
+  body {
+    min-height: 100dvh;
+    padding-block: 6px;
   }
 
-  .pad .pad-action,
-  .pad button.secondary {
-    font-size: 14px;
+  main {
+    padding-block: 12px;
   }
 
-  .pad .pad-action.red-note {
-    font-size: 11px;
+  .hero {
+    margin-bottom: 8px;
+  }
+
+  .top-bar {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .field {
+    gap: 4px;
+  }
+
+  /* Allow longer translations without reducing the 690px desktop board. */
+  .panel {
+    padding-block: 14px;
+  }
+
+  .utility-buttons button,
+  .primary-actions button {
+    min-height: 42px;
+    padding-block: 8px;
+  }
+
+  .board-wrapper {
+    grid-template-columns: minmax(0, min(calc(100% - 340px), calc(100dvh - 230px))) 320px;
+    justify-content: center;
   }
 }
+
+/* Keep the pad comfortably usable when the window is shorter. */
+@media (min-width: 901px) and (max-height: 880px) {
+  .sidebar {
+    gap: 6px;
+  }
+
+  .panel {
+    gap: 5px;
+    padding-block: 10px;
+  }
+
+  .message-panel {
+    padding-block: 10px;
+  }
+
+  .pad button {
+    min-height: 54px;
+  }
+}
+
+/* Arabic UI uses RTL text; puzzle coordinates, numeric controls, and timer stay LTR. */
+#seed, #clueCount { direction: ltr; }

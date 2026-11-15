@@ -10,12 +10,21 @@
 <body>
   <main>
     <header class="hero">
-      <h1 id="title">数独 (Sudoku)</h1>
+      <h1 id="title" aria-label="数独 (Sudoku)">
+        <span class="brand-lockup">
+          <img class="brand-icon" src="./icons/icon128.png" width="52" height="52" alt="" aria-hidden="true" />
+          <span class="brand-type">
+            <span class="brand-wordmark">Sudoku</span>
+            <span class="brand-caption"><span class="brand-rule" aria-hidden="true"></span><span lang="ja">数独</span><span class="brand-rule" aria-hidden="true"></span></span>
+          </span>
+        </span>
+      </h1>
       <div class="utility-actions">
         <div class="utility-buttons">
           <button class="ghost" id="saveGame" type="button">状態を保存</button>
           <button class="ghost" id="loadGame" type="button">保存を読込</button>
-          <button class="ghost" id="help" type="button" aria-haspopup="dialog" aria-controls="helpOverlay" aria-expanded="false">使い方</button>
+          <button class="ghost" id="highlightSettings" type="button" aria-haspopup="dialog" aria-controls="highlightSettingsOverlay" aria-expanded="false">設定</button>
+          <button class="ghost" id="help" type="button" aria-haspopup="dialog" aria-controls="helpOverlay" aria-expanded="false">ヘルプ</button>
         </div>
         <div class="timer" id="timer" aria-live="polite">--:--</div>
         <input id="loadFile" type="file" accept=".json,application/json" hidden />
@@ -55,8 +64,31 @@
         <div class="field">
           <label id="langLabel" for="lang">Language</label>
           <select id="lang">
-            <option value="ja">Japanese</option>
+            <option value="ja">日本語</option>
             <option value="en">English</option>
+            <option value="zh-CN">简体中文</option>
+            <option value="hi">हिन्दी</option>
+            <option value="es">Español</option>
+            <option value="ar">العربية</option>
+            <option value="fr">Français</option>
+            <option value="pt-BR">Português (Brasil)</option>
+            <option value="pt-PT">Português (Portugal)</option>
+            <option value="ru">Русский</option>
+            <option value="de">Deutsch</option>
+            <option value="id">Bahasa Indonesia</option>
+            <option value="bn">বাংলা</option>
+            <option value="tr">Türkçe</option>
+            <option value="ko">한국어</option>
+            <option value="vi">Tiếng Việt</option>
+            <option value="it">Italiano</option>
+            <option value="nl">Nederlands</option>
+            <option value="pl">Polski</option>
+            <option value="th">ไทย</option>
+            <option value="ur">اردو</option>
+            <option value="fa">فارسی</option>
+            <option value="sw">Kiswahili</option>
+            <option value="zh-TW">繁體中文</option>
+            <option value="uk">Українська</option>
           </select>
         </div>
 
@@ -86,17 +118,45 @@
 
     <div class="board-wrapper">
       <div class="board" id="board" aria-label="Sudoku board"></div>
-      <div class="panel">
-        <h2 id="padTitle">数字パッド</h2>
-        <div class="pad" id="pad"></div>
-        <div class="controls">
-          <button class="ghost" id="undo">↩️ １つ戻す</button>
-          <button class="ghost" id="redo">↪️ １つ進める</button>
-        </div>
-        <p class="hint-text" id="hintText"></p>
-        <div class="stats" id="stats"></div>
-        <div class="status" id="status"></div>
+      <div class="sidebar">
+        <section class="panel" aria-labelledby="padTitle">
+          <div class="panel-header">
+            <h2 id="padTitle">数字パッド</h2>
+            <button class="pad-clear" id="clearPad" type="button">クリア</button>
+          </div>
+          <div class="pad" id="pad"></div>
+          <div class="pad-modes" id="padModes"></div>
+          <div class="controls">
+            <button class="ghost" id="undo">↩️ １つ戻す</button>
+            <button class="ghost" id="redo">↪️ １つ進める</button>
+          </div>
+          <ul class="pad-help-list" id="hintText"></ul>
+        </section>
+
+        <section class="message-panel" aria-live="polite">
+          <ul class="stats-list" id="stats"></ul>
+          <div class="status" id="status"></div>
+        </section>
       </div>
+    </div>
+
+    <div class="help-overlay" id="highlightSettingsOverlay" hidden>
+      <section class="settings-dialog" id="highlightSettingsDialog" role="dialog" aria-modal="true" aria-labelledby="highlightSettingsTitle">
+        <div class="help-header">
+          <h2 id="highlightSettingsTitle">ハイライト設定</h2>
+          <button class="ghost" id="highlightSettingsClose" type="button">閉じる</button>
+        </div>
+        <div class="settings-dialog-content">
+          <label class="toggle-option" id="highlightCompletedToggleLabel">
+            <input id="highlightCompletedToggle" type="checkbox" />
+            <span id="highlightCompletedToggleText">そろった数字をハイライト</span>
+          </label>
+          <label class="toggle-option" id="highlightDuplicateToggleLabel">
+            <input id="highlightDuplicateToggle" type="checkbox" />
+            <span id="highlightDuplicateToggleText">重複した数字をハイライト</span>
+          </label>
+        </div>
+      </section>
     </div>
 
     <div class="help-overlay" id="helpOverlay" hidden>

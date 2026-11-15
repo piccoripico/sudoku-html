@@ -10,7 +10,7 @@ import type { Board, Digit } from './sudoku.js';
 import { captureTimerSnapshot, type TimerSnapshot, type TimerState } from './timer.js';
 
 export const SAVE_FILE_FORMAT = 'sudoku-html-save';
-export const SAVE_FILE_VERSION = 1;
+export const SAVE_FILE_VERSION = 2;
 
 interface SerializedNoteEntry {
   value: number;
@@ -48,7 +48,7 @@ export interface SaveState {
   future: HistorySnapshot[];
 }
 
-export interface SaveFileV1 {
+export interface SaveFile {
   format: typeof SAVE_FILE_FORMAT;
   version: typeof SAVE_FILE_VERSION;
   savedAt: string;
@@ -71,7 +71,7 @@ export interface SaveFileV1 {
   };
 }
 
-export interface RestoredSaveFileV1 {
+export interface RestoredSaveFile {
   format: typeof SAVE_FILE_FORMAT;
   version: typeof SAVE_FILE_VERSION;
   savedAt: string;
@@ -87,7 +87,7 @@ function assertValid(condition: unknown, message: string): asserts condition {
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function assertRecord(value: unknown, message: string): asserts value is Record<string, unknown> {
@@ -96,6 +96,11 @@ function assertRecord(value: unknown, message: string): asserts value is Record<
 
 function isUnknownArray(value: unknown): value is unknown[] {
   return Array.isArray(value);
+}
+
+function requireBoolean(value: unknown, name: string): boolean {
+  assertValid(typeof value === 'boolean', `${name} must be a boolean.`);
+  return value;
 }
 
 function isIntegerInRange(value: number, min: number, max: number): boolean {
@@ -131,12 +136,11 @@ function normalizeBoard(board: unknown, name: string, minValue: number, maxValue
     assertValid(isUnknownArray(row) && row.length === 9, `${name}[${rowIndex}] must contain 9 cells.`);
 
     return row.map((value, colIndex) => {
-      const numericValue = Number(value);
       assertValid(
-        isIntegerInRange(numericValue, minValue, maxValue),
+        typeof value === 'number' && isIntegerInRange(value, minValue, maxValue),
         `${name}[${rowIndex}][${colIndex}] must be an integer between ${minValue} and ${maxValue}.`
       );
-      return toBoardValue(numericValue);
+      return toBoardValue(value);
     });
   });
 }
@@ -146,8 +150,8 @@ function serializeNotes(notesBoard: NotesBoard): SerializedNotesBoard {
     Array.from(noteMap.entries())
       .sort((a, b) => Number(a[0]) - Number(b[0]))
       .map(([value, entry]) => ({
-        value: Number(value),
-        highlighted: Boolean(entry?.highlighted)
+        value,
+        highlighted: entry.highlighted
       }))
   )));
 }
@@ -168,13 +172,13 @@ function deserializeNotes(notesBoard: unknown, name: string): NotesBoard {
       const noteMap = new Map<Digit, { highlighted: boolean }>();
       for (const [index, entry] of cellData.entries()) {
         assertRecord(entry, `${name}[${row}][${col}][${index}] must be an object.`);
-        const value = Number(entry.value);
+        const value = entry.value;
         assertValid(
-          isDigit(value),
+          typeof value === 'number' && isDigit(value),
           `${name}[${row}][${col}][${index}].value must be an integer between 1 and 9.`
         );
         assertValid(!noteMap.has(value), `${name}[${row}][${col}] contains duplicate note values.`);
-        noteMap.set(value, { highlighted: Boolean(entry.highlighted) });
+        noteMap.set(value, { highlighted: requireBoolean(entry.highlighted, `${name}[${row}][${col}][${index}].highlighted`) });
       }
 
       const restoredRow = requireIndex(restored, row, 'restored notes');
@@ -186,16 +190,16 @@ function deserializeNotes(notesBoard: unknown, name: string): NotesBoard {
 }
 
 function normalizeSelectedCell(selectedCell: unknown, name: string): CellPosition | null {
-  if (selectedCell == null) {
+  if (selectedCell === null) {
     return null;
   }
 
   assertRecord(selectedCell, `${name} must be null or an object.`);
 
-  const row = Number(selectedCell.row);
-  const col = Number(selectedCell.col);
-  assertValid(isIntegerInRange(row, 0, 8), `${name}.row must be an integer between 0 and 8.`);
-  assertValid(isIntegerInRange(col, 0, 8), `${name}.col must be an integer between 0 and 8.`);
+  const row = selectedCell.row;
+  const col = selectedCell.col;
+  assertValid(typeof row === 'number' && isIntegerInRange(row, 0, 8), `${name}.row must be an integer between 0 and 8.`);
+  assertValid(typeof col === 'number' && isIntegerInRange(col, 0, 8), `${name}.col must be an integer between 0 and 8.`);
 
   return { row, col };
 }
@@ -203,19 +207,18 @@ function normalizeSelectedCell(selectedCell: unknown, name: string): CellPositio
 function normalizeTimer(timerSnapshot: unknown, name: string): TimerSnapshot {
   assertRecord(timerSnapshot, `${name} must be an object.`);
 
-  const elapsedMs = Number(timerSnapshot.elapsedMs);
-  assertValid(Number.isFinite(elapsedMs) && elapsedMs >= 0, `${name}.elapsedMs must be a non-negative number.`);
+  const elapsedMs = timerSnapshot.elapsedMs;
+  assertValid(typeof elapsedMs === 'number' && Number.isFinite(elapsedMs) && elapsedMs >= 0, `${name}.elapsedMs must be a non-negative number.`);
 
   return {
     elapsedMs,
-    running: Boolean(timerSnapshot.running)
+    running: requireBoolean(timerSnapshot.running, `${name}.running`)
   };
 }
 
 function normalizeNonNegativeInteger(value: unknown, name: string): number {
-  const numericValue = Number(value);
-  assertValid(Number.isInteger(numericValue) && numericValue >= 0, `${name} must be a non-negative integer.`);
-  return numericValue;
+  assertValid(typeof value === 'number' && Number.isInteger(value) && value >= 0, `${name} must be a non-negative integer.`);
+  return value;
 }
 
 function normalizeSnapshot(snapshot: unknown, name: string): HistorySnapshot {
@@ -225,12 +228,28 @@ function normalizeSnapshot(snapshot: unknown, name: string): HistorySnapshot {
     current: normalizeBoard(snapshot.current, `${name}.current`, 0, 9),
     notes: deserializeNotes(snapshot.notes, `${name}.notes`),
     hintCount: normalizeNonNegativeInteger(snapshot.hintCount, `${name}.hintCount`),
-    solutionRevealed: Boolean(snapshot.solutionRevealed),
-    noteMode: Boolean(snapshot.noteMode),
-    highlightNoteMode: Boolean(snapshot.highlightNoteMode),
+    solutionRevealed: requireBoolean(snapshot.solutionRevealed, `${name}.solutionRevealed`),
+    noteMode: requireBoolean(snapshot.noteMode, `${name}.noteMode`),
+    highlightNoteMode: requireBoolean(snapshot.highlightNoteMode, `${name}.highlightNoteMode`),
     selectedCell: normalizeSelectedCell(snapshot.selectedCell, `${name}.selectedCell`),
     timer: normalizeTimer(snapshot.timer, `${name}.timer`)
   };
+}
+
+function requireString(value: unknown, name: string): string {
+  assertValid(typeof value === 'string', `${name} must be a string.`);
+  return value;
+}
+
+function normalizeSavedAt(value: unknown): string {
+  const timestamp = requireString(value, 'savedAt');
+  assertValid(!Number.isNaN(Date.parse(timestamp)), 'savedAt must be a valid date.');
+  return timestamp;
+}
+
+function normalizeHistory(value: unknown, name: string): HistorySnapshot[] {
+  assertValid(isUnknownArray(value), `${name} must be an array.`);
+  return value.map((snapshot, index) => normalizeSnapshot(snapshot, `${name}[${index}]`));
 }
 
 function serializeSnapshot(snapshot: HistorySnapshot): SerializedSnapshot {
@@ -238,14 +257,11 @@ function serializeSnapshot(snapshot: HistorySnapshot): SerializedSnapshot {
     current: cloneBoard(snapshot.current),
     notes: serializeNotes(snapshot.notes),
     hintCount: snapshot.hintCount,
-    solutionRevealed: Boolean(snapshot.solutionRevealed),
-    noteMode: Boolean(snapshot.noteMode),
-    highlightNoteMode: Boolean(snapshot.highlightNoteMode),
+    solutionRevealed: snapshot.solutionRevealed,
+    noteMode: snapshot.noteMode,
+    highlightNoteMode: snapshot.highlightNoteMode,
     selectedCell: snapshot.selectedCell ? { ...snapshot.selectedCell } : null,
-    timer: {
-      elapsedMs: Number(snapshot.timer.elapsedMs),
-      running: Boolean(snapshot.timer.running)
-    }
+    timer: { ...snapshot.timer }
   };
 }
 
@@ -281,7 +297,7 @@ function validateCurrentAgainstPuzzle(current: Board, puzzle: Board, name: strin
   }
 }
 
-export function createSaveData(state: SaveState, now = Date.now()): SaveFileV1 {
+export function createSaveData(state: SaveState, now = Date.now()): SaveFile {
   return {
     format: SAVE_FILE_FORMAT,
     version: SAVE_FILE_VERSION,
@@ -292,21 +308,21 @@ export function createSaveData(state: SaveState, now = Date.now()): SaveFileV1 {
       current: cloneBoard(state.current),
       notes: serializeNotes(state.notes),
       hintCount: state.hintCount,
-      solutionRevealed: Boolean(state.solutionRevealed),
-      noteMode: Boolean(state.noteMode),
-      highlightNoteMode: Boolean(state.highlightNoteMode),
+      solutionRevealed: state.solutionRevealed,
+      noteMode: state.noteMode,
+      highlightNoteMode: state.highlightNoteMode,
       selectedCell: state.selectedCell ? { ...state.selectedCell } : null,
       timer: captureTimerSnapshot(state.timer, now),
       selectedClueCount: state.selectedClueCount,
-      selectedSeedRaw: String(state.selectedSeedRaw ?? ''),
-      selectedSeedWasRandom: Boolean(state.selectedSeedWasRandom),
+      selectedSeedRaw: state.selectedSeedRaw,
+      selectedSeedWasRandom: state.selectedSeedWasRandom,
       history: state.history.map(serializeSnapshot),
       future: state.future.map(serializeSnapshot)
     }
   };
 }
 
-export function parseSaveText(text: string): RestoredSaveFileV1 {
+export function parseSaveText(text: string): RestoredSaveFile {
   let parsed: unknown;
 
   try {
@@ -331,27 +347,23 @@ export function parseSaveText(text: string): RestoredSaveFileV1 {
   return {
     format: SAVE_FILE_FORMAT,
     version: SAVE_FILE_VERSION,
-    savedAt: typeof parsed.savedAt === 'string' ? parsed.savedAt : '',
+    savedAt: normalizeSavedAt(parsed.savedAt),
     game: {
       puzzle,
       solution,
       current,
       notes: deserializeNotes(game.notes, 'game.notes'),
       hintCount: normalizeNonNegativeInteger(game.hintCount, 'game.hintCount'),
-      solutionRevealed: Boolean(game.solutionRevealed),
-      noteMode: Boolean(game.noteMode),
-      highlightNoteMode: Boolean(game.highlightNoteMode),
+      solutionRevealed: requireBoolean(game.solutionRevealed, 'game.solutionRevealed'),
+      noteMode: requireBoolean(game.noteMode, 'game.noteMode'),
+      highlightNoteMode: requireBoolean(game.highlightNoteMode, 'game.highlightNoteMode'),
       selectedCell: normalizeSelectedCell(game.selectedCell, 'game.selectedCell'),
       timer: normalizeTimer(game.timer, 'game.timer'),
       selectedClueCount: normalizeNonNegativeInteger(game.selectedClueCount, 'game.selectedClueCount'),
-      selectedSeedRaw: String(game.selectedSeedRaw ?? ''),
-      selectedSeedWasRandom: Boolean(game.selectedSeedWasRandom),
-      history: isUnknownArray(game.history)
-        ? game.history.map((snapshot, index) => normalizeSnapshot(snapshot, `game.history[${index}]`))
-        : [],
-      future: isUnknownArray(game.future)
-        ? game.future.map((snapshot, index) => normalizeSnapshot(snapshot, `game.future[${index}]`))
-        : []
+      selectedSeedRaw: requireString(game.selectedSeedRaw, 'game.selectedSeedRaw'),
+      selectedSeedWasRandom: requireBoolean(game.selectedSeedWasRandom, 'game.selectedSeedWasRandom'),
+      history: normalizeHistory(game.history, 'game.history'),
+      future: normalizeHistory(game.future, 'game.future')
     }
   };
 }

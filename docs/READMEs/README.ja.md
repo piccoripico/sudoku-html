@@ -1,0 +1,52 @@
+# 数独 (Sudoku) HTML
+
+[日本語](./README.ja.md) | [English](../../README.md) | [简体中文](./README.zh-CN.md) | [हिन्दी](./README.hi.md) | [Español](./README.es.md) | [العربية](./README.ar.md) | [Français](./README.fr.md) | [Português (Brasil)](./README.pt-BR.md) | [Português (Portugal)](./README.pt-PT.md) | [Русский](./README.ru.md) | [Deutsch](./README.de.md) | [Bahasa Indonesia](./README.id.md) | [বাংলা](./README.bn.md) | [Türkçe](./README.tr.md) | [한국어](./README.ko.md) | [Tiếng Việt](./README.vi.md) | [Italiano](./README.it.md) | [Nederlands](./README.nl.md) | [Polski](./README.pl.md) | [ไทย](./README.th.md) | [اردو](./README.ur.md) | [فارسی](./README.fa.md) | [Kiswahili](./README.sw.md) | [繁體中文](./README.zh-TW.md) | [Українська](./README.uk.md)
+
+数独 (Sudoku) HTML は、単一の `Sudoku_v1.9.0.html` ファイル、オンラインページ、Chrome・Edge・Firefoxの拡張機能のいずれでも遊べるブラウザ向け数独ゲームです。
+
+| デスクトップ表示 | モバイル表示 |
+| --- | --- |
+| <img src="./screenshots/screenshot_desktop_ja.jpeg" alt="デスクトップで見た数独画面" width="520" /> | <img src="./screenshots/screenshot_mobile_ja.jpeg" alt="モバイルで見た数独画面" width="160" /> |
+
+## プレイ方法
+
+[ゲームガイド](../game-guides/GAME_GUIDE.ja.md)
+
+遊び方は次の3つから選べます。
+
+| 遊び方 | 利用方法 |
+| --- | --- |
+| **HTML ファイルをダウンロードする** | [Sudoku_v1.9.0.html](https://github.com/piccoripico/sudoku-html/releases/latest/download/Sudoku_v1.9.0.html)<br />ダウンロードしたファイルをブラウザで直接開けば、オフラインで遊べます。 |
+| **オンラインで遊ぶ** | <https://piccoripico.github.io/sudoku-html/><br />同じゲームをオンラインで開けます。ページを読み込んだ後は、そのセッション中、インターネット接続なしで遊べます。 |
+| **ブラウザ拡張機能をインストールする** | インストールしておけば、ツールバーアイコンから「ワンクリック数独」を通常のブラウザタブに開き、インターネット接続なしで遊べます。<br /> <a href="https://chromewebstore.google.com/detail/one-click-sudoku/mobbahgfmncnppilfpnfpggmlihfghfc"><img src="./badges/chrome-web-store-badge.png" alt="Chrome Web Store で入手" height="58" /></a> <a href="https://microsoftedge.microsoft.com/addons/detail/cgcjekopfndblbbdokilihilppanmkpo"><img src="./badges/microsoft-edge-addons-badge-en.png" alt="Microsoft Edge から入手" height="58" /></a> <a href="https://addons.mozilla.org/en-US/firefox/addon/one-click-sudoku/"><img src="https://blog.mozilla.org/addons/files/2020/04/get-the-addon-fx-apr-2020.svg" alt="Get the Firefox Add-on" height="58" /></a> |
+
+## 特徴
+
+- **ポータブル**: アプリ全体が 1 つの `Sudoku_v1.9.0.html` にまとまっているので、パソコンやスマホに保存しておけば、どこにでも持ち運べます。
+- **オフライン**: プログラムはオフラインで動くので、 `Sudoku_v1.9.0.html` をダウンロードした後やChrome・Edge・Firefoxの拡張機能をインストールした後は、インターネット接続なしで遊べます。
+- **デスクトップ / モバイル UI**: 横幅の広いデスクトップ画面でも、縦長のモバイル画面でも使いやすいレイアウトです。
+- **ライト / ダークテーマ**: 表示を「システム設定」「ライト」「ダーク」から選べます。「システム設定」ではOSのカラーモードに自動追従します。
+- **盤面の再現**: 同じシード値を入力して盤面を作成すれば、ヒントの配置も含めて、同じ盤面を再現できます。
+- **メモ、ヒント、Undo 履歴**: メモ、赤メモ、ヒント、解答表示、Undo/Redo を使いながら解けます。
+- **途中保存と再開**: 現在の盤面、メモ、タイマー、Undo/Redo の履歴をローカル JSON ファイルとして保存できます。保存したファイルを読み込むと、同じ状態で再開できます。
+- **アカウントや外部サービス不要**: 広告、課金、アカウント、分析、ゲームデータの外部送信、ユーザーデータの収集はありません。
+- **完成盤面の数**: 1つのテンプレート系統だけでも、変換によって少なくとも約6095億通りの完成盤面を生成できます。実際の実装では複数のテンプレート系統を使うため、全体のバリエーションはさらに多くなります。
+
+## 開発
+
+1. `npm ci` を実行します。
+2. `npm run typecheck` を実行します。
+3. `npm test` を実行します。
+4. `npm run build` を実行します。
+5. ブラウザテストを初めて使うときは、`npm run test:e2e:install` を実行します。
+6. ブラウザ／runtime のスモークテストは `npm run test:e2e`、一連の完全な確認は `npm run verify` で実行できます。
+
+`npm run build` は自己完結した `dist/Sudoku_v1.9.0.html` と、展開済みの Manifest V3 拡張機能パッケージ `dist/extension-chromium` と `dist/extension-firefox` を生成します。`npm run verify` は TypeScript 型検査、unit test、成果物契約検査、ブラウザ／runtime test をまとめて実行します。
+
+## 自動化
+
+GitHub Actions により、テスト、Pages 公開、Release asset 生成を自動化しています。
+
+- CI: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) は `main` 向けの pull request で実行され、`Actions` タブから手動実行もできます。
+- Pages: [`.github/workflows/pages.yml`](../../.github/workflows/pages.yml) は `main` への push で実行され、`dist/Sudoku_v1.9.0.html` をビルドして GitHub Pages <https://piccoripico.github.io/sudoku-html/> に公開します。
+- Release: [`.github/workflows/release.yml`](../../.github/workflows/release.yml) は `v1.2.3` のようなバージョンタグ push で実行され、`Sudoku_v1.9.0.html` を GitHub Release に自動添付します。

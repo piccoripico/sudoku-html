@@ -1,0 +1,14 @@
+{
+  "extensionName": {
+    "message": "One-Click Sudoku"
+  },
+  "extensionShortName": {
+    "message": "Sudoku"
+  },
+  "extensionDescription": {
+    "message": "เปิดซูโดกุจากแถบเครื่องมือและเล่นออฟไลน์"
+  },
+  "extensionActionTitle": {
+    "message": "เปิดซูโดกุ"
+  }
+}

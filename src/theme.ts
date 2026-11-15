@@ -1,5 +1,5 @@
 import { requireElement } from './lib/dom.js';
-import { isLanguage, translate, type Language } from './lib/i18n.js';
+import { isLanguage, resolveLanguage, translate, type Language } from './lib/i18n.js';
 import {
   LANGUAGE_STORAGE_KEY,
   THEME_STORAGE_KEY,
@@ -50,11 +50,11 @@ function getInitialLanguage(): Language {
     return savedLang;
   }
 
-  return (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+  return resolveLanguage(navigator.languages?.length ? [...navigator.languages] : [navigator.language]);
 }
 
 function updateThemeLabels(lang = langSelectEl.value): void {
-  const resolvedLang: Language = isLanguage(lang) ? lang : 'ja';
+  const resolvedLang: Language = isLanguage(lang) ? lang : 'en';
   themeLabelEl.textContent = translate(resolvedLang, 'themeLabel');
 
   const labels: Record<ThemePreference, string> = {

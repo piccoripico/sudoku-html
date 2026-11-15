@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="280" viewBox="0 0 440 280">
+<rect width="440" height="280" fill="#F8FAFC"/>
+<g transform="translate(48.451562499999994 92.665625) scale(1.8)">
+<g transform="translate(0 0.296875) scale(0.05078125)">
+<rect id="background" x="2" y="2" width="1020" height="1020" rx="174" fill="#052940"/>
+<rect class="tile" x="50" y="50" width="292" height="292" rx="58" fill="#FFC318"/>
+<rect class="tile" x="366" y="50" width="292" height="292" rx="58" fill="#F8FCFF"/>
+<rect class="tile" x="682" y="50" width="292" height="292" rx="58" fill="#F8FCFF"/>
+<rect class="tile" x="50" y="366" width="292" height="292" rx="58" fill="#F8FCFF"/>
+<rect class="tile" x="366" y="366" width="292" height="292" rx="58" fill="#31EAC1"/>
+<rect class="tile" x="682" y="366" width="292" height="292" rx="58" fill="#F8FCFF"/>
+<rect class="tile" x="50" y="682" width="292" height="292" rx="58" fill="#F8FCFF"/>
+<rect class="tile" x="366" y="682" width="292" height="292" rx="58" fill="#F8FCFF"/>
+<rect class="tile" x="682" y="682" width="292" height="292" rx="58" fill="#FFC318"/>
+<path id="center-nine" d="M205 33V309Q297 266 381.0 244.5Q465 223 547 223Q719 223 815.0 318.5Q911 414 928 602Q860 552 783.0 527.0Q706 502 616 502Q387 502 246.5 635.5Q106 769 106 987Q106 1228 262.5 1373.0Q419 1518 682 1518Q974 1518 1134.0 1321.0Q1294 1124 1294 764Q1294 394 1107.0 182.5Q920 -29 594 -29Q489 -29 393.0 -13.5Q297 2 205 33ZM680 752Q781 752 832.0 817.5Q883 883 883 1014Q883 1144 832.0 1210.0Q781 1276 680 1276Q579 1276 528.0 1210.0Q477 1144 477 1014Q477 883 528.0 817.5Q579 752 680 752Z" transform="translate(385.905724 632.313510) scale(0.18013468 -0.16160310)" fill="#052940" fill-rule="evenodd"/>
+</g>
+<text id="wordmark" x="64" y="31.7" data-width="126.609375" fill="#0F172A" font-family="Helvetica Neue, Arial, sans-serif" font-size="36" font-weight="800" letter-spacing="-0.9">Sudoku</text>
+<rect id="rule-left" x="64" y="43.296875" width="41.2578125" height="3" rx="1.5" fill="#0D9488"/>
+<text id="caption-text" x="127.3046875" y="49.7" data-width="28.09375" text-anchor="middle" fill="#0F172A" font-family="Noto Sans CJK JP, sans-serif" font-size="13" font-weight="700" letter-spacing="1.04">数独</text>
+<rect id="rule-right" x="149.3515625" y="43.296875" width="41.2578125" height="3" rx="1.5" fill="#0D9488"/>
+</g>
+</svg>

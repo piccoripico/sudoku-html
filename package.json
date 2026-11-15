@@ -1,17 +1,21 @@
 {
   "name": "sudoku-html",
+  "version": "1.9.0",
   "private": true,
   "type": "module",
   "scripts": {
+    "check:release-tag": "npm run build:tools && node ./.build/tools/scripts/check-release-tag.js",
     "build:tools": "tsc -p config/tsconfig/tools.json",
     "build": "npm run build:tools && node ./.build/tools/scripts/build.js",
     "test": "npm run build:tools && node ./.build/tools/scripts/run-unit-tests.js",
-    "test:e2e": "playwright test",
-    "test:e2e:install": "playwright install chromium",
+    "test:e2e": "npx playwright test --config config/playwright.config.ts",
+    "test:e2e:install": "npx playwright install chromium",
     "serve:dist": "npm run build:tools && node ./.build/tools/scripts/serve-dist.js",
     "verify": "npm run typecheck && npm run test && npm run build && npm run test:artifacts && npm run test:e2e",
     "test:artifacts": "npm run build:tools && node ./.build/tools/scripts/check-artifacts.js",
-    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p config/tsconfig/extension.json --noEmit && tsc -p config/tsconfig/tools.json --noEmit && tsc -p config/tsconfig/tests.json --noEmit && tsc -p config/tsconfig/playwright.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p config/tsconfig/extension.json --noEmit && tsc -p config/tsconfig/tools.json --noEmit && tsc -p config/tsconfig/tests.json --noEmit && tsc -p config/tsconfig/playwright.json --noEmit",
+    "screenshots": "npm run build && npx playwright test --config config/playwright.screenshots.config.ts && npm run screenshots:store",
+    "screenshots:store": "python scripts/render_store_screenshots.py"
   },
   "devDependencies": {
     "@playwright/test": "1.59.1",

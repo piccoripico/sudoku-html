@@ -1,0 +1,14 @@
+{
+  "extensionName": {
+    "message": "One-Click Sudoku"
+  },
+  "extensionShortName": {
+    "message": "Sudoku"
+  },
+  "extensionDescription": {
+    "message": "Abra o Sudoku pela barra de ferramentas e jogue offline."
+  },
+  "extensionActionTitle": {
+    "message": "Abrir Sudoku"
+  }
+}
